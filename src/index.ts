@@ -1,24 +1,21 @@
-import { execSync, spawn } from "child_process";
-import axios from "axios";
+import { spawn } from "child_process";
 import readline from "readline";
-
+import ollama from "ollama";
+import { execSync } from "child_process";
 // Default Model
 const DEFAULT_MODEL = "deepseek-r1:1.5b";
 
 // Helper: Fetch the last command from shell history
 function getLastCommand(): string {
   try {
-    // Check if running zsh or bash and fetch the last command
     const shell = process.env.SHELL || "";
     let historyCommand: string;
 
     if (shell.includes("zsh")) {
       const historyFile = process.env.HISTFILE || "~/.zsh_history";
-      // Fetch the last two commands and get the second one
       historyCommand = `tail -n 2 ${historyFile} | head -n 1 | sed 's/^: [0-9]*:[0-9];//'`;
     } else if (shell.includes("bash")) {
       const historyFile = process.env.HISTFILE || "~/.bash_history";
-      // Fetch the last two commands and get the second one
       historyCommand = `tail -n 2 ${historyFile} | head -n 1`;
     } else {
       console.error("Unsupported shell. Please provide a command manually.");
@@ -33,9 +30,7 @@ function getLastCommand(): string {
 }
 
 // Helper: Run a shell command and capture its output
-async function runCommand(
-  command: string
-): Promise<{ output: string; error: string }> {
+async function runCommand(command: string): Promise<{ output: string; error: string }> {
   return new Promise((resolve) => {
     const process = spawn(command, { shell: true });
     let output = "";
@@ -55,17 +50,17 @@ async function runCommand(
   });
 }
 
-// Helper: Send a query to the Ollama model
 async function queryOllama(model: string, input: string): Promise<string> {
   try {
     console.log("Querying Ollama model...");
-    const response = await axios.post("http://localhost:11434/api/chat", {
+    const response = await ollama.chat({
       model,
       messages: [{ role: "user", content: input }],
     });
-    return response.data.reply || "No response from the model.";
+    console.log("Model response received:", response);
+    return "No response from the model.";
   } catch (error) {
-    console.error("Error querying Ollama:", (error as any).message);
+    console.error("Error querying Ollama:", error);
     return "Failed to query the model.";
   }
 }
@@ -141,9 +136,9 @@ async function main() {
       ],
       "corrected_command": "clear"
   }`;
-  const modelResponse = await queryOllama(model, ollamaInput);
 
-  console.log("\nModel Response:\n", modelResponse);
+  const modelResponse = await queryOllama(model, ollamaInput);
+  console.log("Model response:", modelResponse); // Log the raw model response
 
   // Parse and confirm the AI-suggested command
   const errorMatch = modelResponse.match(/Error:\s*(.+)/i);
@@ -176,4 +171,6 @@ async function main() {
   });
 }
 
-main();
+main().catch((err) => {
+  console.error("Error in main function:", err);
+});

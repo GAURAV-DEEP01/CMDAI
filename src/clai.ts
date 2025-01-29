@@ -4,9 +4,13 @@ import readline from "readline";
 import ollama from "ollama";
 import { execSync } from "child_process";
 import { defaultPrompt } from "./data/defaultPrompt";
-import showHelp from "./components/help";
-import { SessionSubCommand, Flag } from "./util/constants";
+import { getVersion, showHelp } from "./components/info";
+import { SessionSubCommand, Flag, Primary } from "./util/constants";
 import { parseCLIArgs } from "./util/ArgParser";
+
+import { CLIArgs } from "./util/CLIArgs";
+import { ArgumentError } from "./types/errors";
+import fs from "fs";
 
 // Default Model
 const DEFAULT_MODEL = "deepseek-r1:1.5b";
@@ -45,7 +49,7 @@ function runCommand(
     // if (verbose) {
     console.log(
       `Running command: ${command} with` +
-      (args.length > 0 ? ` arguments: ` + args : ` no arguments`)
+        (args.length > 0 ? ` arguments: ` + args : ` no arguments`)
     );
     // } else {
     //   console.log("Running command");
@@ -80,53 +84,72 @@ function runCommand(
   });
 }
 
-async function queryOllama(
-  model: string,
-  input: string,
-  verbose: boolean
-): Promise<void> {
-  try {
-    console.log(`Querying ${model} model...`);
-    const response = await ollama.chat({
-      model,
-      messages: [{ role: "user", content: input }],
-      stream: true,
-    });
-    let thinkingLogged = false;
-    for await (const part of response) {
-      if (verbose) {
-        process.stdout.write(part.message.content);
-      } else if (!thinkingLogged) {
-        console.log("Thinking...");
-        thinkingLogged = true;
-      }
-    }
-  } catch (error) {
-    console.error("Error querying Ollama:", error);
-  }
-}
-import { CLIArgs } from "./util/CLIArgs"
-import { ArgumentError } from "./types/errors";
 async function main() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
-  let args;
+  let userArgs;
   try {
-    args = parseCLIArgs();
+    userArgs = parseCLIArgs();
     // Use the parsed arguments
   } catch (error) {
     if (error instanceof ArgumentError) {
       console.error(`Error (${error.code}): ${error.message}`);
     } else {
-      console.error('Unexpected error:', error);
+      console.error("Unexpected error:", error);
     }
-  }  // echo 'hello'
-  console.log(args);
-  // const splitCommand = userArgs.commandStr?.split(' ');
-  // const commandName = splitCommand[0];
-  // const commandArgs = splitCommand?.slice(1);
+  }
+  if (userArgs?.help) {
+    showHelp(DEFAULT_MODEL);
+    return;
+  }
+  if (userArgs?.version) {
+    getVersion();
+    return;
+  }
+
+  if (userArgs?.primary === Primary.SESSION) {
+    const configPath = "./config/config.json";
+    let configFile;
+    let config;
+    try {
+      configFile = fs.readFileSync(configPath, "utf8");
+      config = JSON.parse(configFile);
+    } catch (e) {
+      console.log("Error reading config file", e);
+    }
+    if (userArgs?.subCommand === SessionSubCommand.START) {
+      if (config.session) {
+        console.log("Session already started");
+        return;
+      }
+      console.log("Session started");
+      config.session = true;
+      console.log("Session state updated to true in config.json");
+    } else if (userArgs?.subCommand === SessionSubCommand.END) {
+      if (!config.session) {
+        console.log("No Session found");
+        return;
+      }
+      console.log("Session ended");
+      config.session = false;
+      console.log("Session state updated to false in config.json");
+    } else if (userArgs?.subCommand === SessionSubCommand.STATUS) {
+      if (!config.session) {
+        console.log("Session status: not running");
+      } else {
+        console.log("Session status: running");
+      }
+    }
+    try {
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    } catch (e) {
+      console.log("Error writing to config file", e);
+    }
+    return;
+  }
+
   // const { output, error } = await runCommand(commandName, command, verbose);
   // if (output) process.stdout.write(output);
   // if (error) process.stdout.write(error);
@@ -184,6 +207,10 @@ async function main() {
   rl.close();
 }
 
-main().catch((err) => {
-  console.error("Error in main function:", err);
-});
+main()
+  .catch((err) => {
+    console.error("Error in main function:", err);
+  })
+  .then(() => {
+    process.exit(1);
+  });

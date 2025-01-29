@@ -1,6 +1,6 @@
 {
   "name": "clai",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": "dist/clai.js",
   "bin": {
     "clai": "dist/clai.js"
@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "npm run build && node dist/clai.js --",
-    "prepare": "npm run build"
+    "test": "npm run build && sudo npm link clai"
   },
   "keywords": [],
   "author": "",

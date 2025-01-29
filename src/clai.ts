@@ -10,10 +10,11 @@ import { ArgumentError } from "./types/errors";
 import fs, { write } from "fs";
 import { getLastCommand, runCommand } from "./util/commandHistory";
 import { handleSessionCommand } from "./util/handleSessionCommand";
-
+import { defaultPrompt } from "./data/defaultPrompt";
+import aiQuery from "./components/aiQuery";
 
 // Default Model
-const DEFAULT_MODEL = "deepseek-r1:1.5b";
+const DEFAULT_MODEL = "deepseek-r1:7b";
 
 async function main() {
   const rl = readline.createInterface({
@@ -43,12 +44,43 @@ async function main() {
   }
 
   if (userArgs?.primary == Primary.EXECUTE) {
-    const commandList = getLastCommand().split(' ');
+    const commandList = getLastCommand().split(" ");
     const mainCommand = commandList[0];
     const commandArgs = commandList.slice(1);
-    const { output, error } = await runCommand(mainCommand, commandArgs, userArgs.verbose);
+    const { output, error } = await runCommand(
+      mainCommand,
+      commandArgs,
+      userArgs.verbose
+    );
     if (output) process.stdout.write(output);
     if (error) process.stdout.write(error);
+    const answer: any = await new Promise((resolve) => {
+      rl.question(
+        `Do you want ${DEFAULT_MODEL} to analyse this output? (y/n):`,
+        resolve
+      );
+    });
+
+    if (answer.toLowerCase() != "y" && answer.toLowerCase() != "yes") {
+      rl.close();
+      return;
+    }
+    let commandWithArguments = mainCommand;
+    commandArgs.map((arg) => {
+      commandWithArguments += " " + arg;
+    });
+    const ollamaInput = defaultPrompt(
+      commandWithArguments,
+      output,
+      error,
+      userArgs.prompt
+    );
+    const response = await aiQuery(
+      DEFAULT_MODEL,
+      ollamaInput,
+      userArgs.verbose
+    );
+    console.dir(response, { depth: null });
   }
 
   if (userArgs?.primary == Primary.CHECK) {
@@ -123,4 +155,3 @@ main()
   .then(() => {
     process.exit(1);
   });
-

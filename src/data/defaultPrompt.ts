@@ -1,126 +1,90 @@
-interface CommandAnalysis {
-  error: string;
-  suggested_command: string;
-  description: string;
-  possible_fixes: string[];
-  corrected_command: string;
-  explanation?: string;
-  common_mistakes?: string[];
-  learning_resources?: string[];
-}
-
-// Function to generate the analysis prompt
-export const generateAnalysisPrompt = (
+export const defaultPrompt = (
   commandWithArguments: string,
   output: string,
   error: string,
   userPrompt?: string
 ): string => {
-  // Enhanced base prompt with more context and examples
-  const basePrompt = `You are an expert command-line analysis AI specializing in bash, zsh, and powershell environments. Your task is to analyze command-line inputs and provide detailed, actionable feedback.
-
-Input Details:
-- Command: ${commandWithArguments}
-- Output/Error: ${output || error}
-- Shell Environment: [auto-detected from error message or output format]
-
-Analysis Guidelines:
-1. Error Analysis:
-   - Identify specific error type (syntax, permission, path, etc.)
-   - Check for common shell-specific issues
-   - Detect typos using edit distance comparison with known commands
-   - Consider context-specific requirements (file permissions, directory structure)
-
-2. Pattern Recognition:
-   - Compare with common command patterns
-   - Identify missing flags or arguments
-   - Check for shell-specific syntax differences
-   - Analyze quotation and escape character usage
-
-3. Solution Framework:
-   - Provide immediate fix for the specific error
-   - Suggest best practices and alternative approaches
-   - Include preventive measures for similar issues
-   - Consider different shell environments
-
-Please structure your response in the following JSON format (Stricty dont change the attribute names of the below Format):
+  const validationSchema = `// VALIDATION RULES - STRICTLY ENFORCED
+1. JSON response MUST EXACTLY match this structure:
+\`\`\`json
 {
-  "error": "Clear, concise error description",
-  "suggested_command": "Most appropriate command for the situation",
-  "description": "Detailed technical explanation of the error and its context",
-  "possible_fixes": [
-    "Immediate solution with explanation",
-    "Alternative approach if applicable",
-    "Prevention tip for future reference"
-  ],
-  "corrected_command": "exact_command_to_run",
-  "explanation": "Detailed explanation of why the error occurred and how the fix works",
-  "common_mistakes": [
-    "Related common mistakes to avoid",
-    "Similar syntax errors to watch for"
-  ],
-  "learning_resources": [
-    "Relevant man pages or documentation",
-    "Helpful tutorial links or commands"
-  ]
+  "error": "string (non-empty, specific error pattern)",
+  "suggested_command": "string (executable command with properly escaped characters)",
+  "description": "string (50-200 characters, technical details)",
+  "possible_fixes": ["string (concrete steps)", "...", "..."],
+  "corrected_command": "string (directly executable verification-ready command)",
+  "explanation": "string (200-500 characters, cause-and-effect analysis)",
+  "common_mistakes": ["string (specific patterns)", "..."],
+  "learning_resources": ["url (https only)", "..."]
 }
+\`\`\`
 
-Examples for Pattern Recognition:
-1. Typos: 'sl' → 'ls', 'gerp' → 'grep'
-2. Missing Sudo: 'apt install' → 'sudo apt install'
-3. Path Issues: './script.sh' when file not executable
-4. Permission Errors: Identify need for chmod/chown
-5. Shell-Specific Syntax: Different array syntax in bash vs zsh
+2. corrected_command MUST be:
+- Executable as-is in detected shell
+- Include necessary environment context
+- Properly escaped for JSON and target shell
+- Validated against common security risks
+
+3. STRICT PROHIBITIONS:
+- No markdown formatting
+- No code comments
+- No placeholders
+- No trailing commas
+- No ambiguous suggestions`;
+
+  const basePrompt = `You are a mission-critical command-line validation engine. Analyze and respond EXCLUSIVELY with valid JSON following these rules:
+
+${validationSchema}
+
+Analysis Context:
+\`\`\`
+- COMMAND: ${commandWithArguments}
+- OUTPUT: ${output}
+- ERROR: ${error}
+- ENV: ${detectShellEnvironment(error)}
+- CWD: ${process.cwd()}
+- USER: ${process.env.USER}
+- OS: ${process.platform}
+\`\`\`
+
+Validation Protocol:
+1. Command autopsy: Line-by-line shell interpretation
+2. Error pattern matching: Cross-reference with 10k+ known issue database
+3. Path resolution: Verify absolute vs relative paths
+4. Permissions check: User/group/file mode analysis
+5. Shell-specific syntax validation: Strict POSIX compliance check
+6. Security audit: Flag potential harmful patterns
+7. Escape sequence verification: Validate quoting/escaping
 
 Response Requirements:
-- Ensure command suggestions are safe to execute
-- Provide complete commands (not partial solutions)
-- Include necessary flags and arguments
-- Consider current directory context
-- Account for different OS environments`;
+- corrected_command must pass \`shellcheck\` and \`shfmt\` validation
+- All URLs must use HTTPS and reference official docs
+- Array lengths: possible_fixes[3], common_mistakes[2], learning_resources[3]
+- String lengths enforced per field (see schema)
+- UTC timestamp: ${new Date().toISOString()}
 
-  // If there's a user prompt, append it with specific instructions on how to use the context
-  if (userPrompt) {
-    return `${basePrompt}\n\nUser Context:\n${userPrompt}\n\nNote: Incorporate this user context to:
-- Adjust technical complexity of explanations
-- Provide more relevant examples
-- Suggest appropriate learning resources
-- Consider user's apparent expertise level
-- Tailor solutions to user's specific environment`;
-  }
+Failure Consequences:
+Invalid responses will cause:
+1. Automated validation failure
+2. Security lockdown
+3. Incident reporting`;
 
-  return basePrompt;
+  return userPrompt
+    ? `${basePrompt}\n\nUser Context:\n${userPrompt}\n\nADAPTATION RULES:\n- Maintain JSON validity\n- Preserve schema structure\n- Keep timestamps\n- Sanitize user input`
+    : basePrompt;
 };
 
-// Function to parse and validate the analysis response
-export const parseAnalysisResponse = (response: string): CommandAnalysis => {
-  try {
-    const parsed = JSON.parse(response) as CommandAnalysis;
+// Helper function to detect shell environment
+const detectShellEnvironment = (error: string): string => {
+  const patterns = {
+    bash: /(bash:|syntax error near unexpected token|declare -)/i,
+    zsh: /(zsh:|no matches found:|bad pattern)/i,
+    powershell: /(PS>|The term '.*' is not recognized)/i,
+    cmd: /'(.*)' is not recognized as an internal or external command/i,
+  };
 
-    // Validate required fields
-    if (!parsed.error || !parsed.suggested_command || !parsed.description ||
-      !Array.isArray(parsed.possible_fixes) || !parsed.corrected_command) {
-      throw new Error('Invalid response format: missing required fields');
-    }
-
-    // Add default values for optional fields if they're missing
-    return {
-      ...parsed,
-      explanation: parsed.explanation || '',
-      common_mistakes: parsed.common_mistakes || [],
-      learning_resources: parsed.learning_resources || []
-    };
-  } catch (error) {
-    throw new Error(`Failed to parse command analysis response: ${error}`);
-  }
+  return (
+    Object.entries(patterns).find(([_, regex]) => regex.test(error))?.[0] ||
+    "posix"
+  );
 };
-
-// Utility function to detect shell type from error message
-export const detectShellType = (error: string): 'bash' | 'zsh' | 'powershell' | 'unknown' => {
-  if (error.includes('bash:')) return 'bash';
-  if (error.includes('zsh:')) return 'zsh';
-  if (error.toLowerCase().includes('powershell')) return 'powershell';
-  return 'unknown';
-};
-
-//Example usage:

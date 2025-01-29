@@ -1,88 +1,19 @@
 #!/usr/bin/env node
+import { CLIArgs } from "./util/CLIArgs";
 import { spawn } from "child_process";
 import readline from "readline";
-import ollama from "ollama";
-import { execSync } from "child_process";
-import { defaultPrompt } from "./data/defaultPrompt";
 import { getVersion, showHelp } from "./components/info";
 import { SessionSubCommand, Flag, Primary } from "./util/constants";
 import { parseCLIArgs } from "./util/ArgParser";
 
-import { CLIArgs } from "./util/CLIArgs";
 import { ArgumentError } from "./types/errors";
-import fs from "fs";
+import fs, { write } from "fs";
+import { getLastCommand, runCommand } from "./util/commandHistory";
+import { handleSessionCommand } from "./util/handleSessionCommand";
+
 
 // Default Model
 const DEFAULT_MODEL = "deepseek-r1:1.5b";
-
-// Helper: Fetch the last command from shell history
-function getLastCommand(): string {
-  try {
-    const shell = process.env.SHELL || "";
-    let historyCommand: string;
-
-    if (shell.includes("zsh")) {
-      const historyFile = process.env.HISTFILE || "~/.zsh_history";
-      historyCommand = `tail -n 2 ${historyFile} | head -n 1 | sed 's/^: [0-9]*:[0-9];//'`;
-    } else if (shell.includes("bash")) {
-      const historyFile = process.env.HISTFILE || "~/.bash_history";
-      historyCommand = `tail -n 2 ${historyFile} | head -n 1`;
-    } else {
-      console.error("Unsupported shell. Please provide a command manually.");
-      return "";
-    }
-
-    return execSync(historyCommand, { shell: shell }).toString().trim();
-  } catch (error) {
-    console.error("Failed to fetch the last command from history.");
-    return "";
-  }
-}
-
-// Helper: Run a shell command and capture its output
-function runCommand(
-  command: string,
-  args: string[],
-  verbose: boolean = false
-): Promise<{ output: string; error: string }> {
-  return new Promise((resolve) => {
-    // if (verbose) {
-    console.log(
-      `Running command: ${command} with` +
-        (args.length > 0 ? ` arguments: ` + args : ` no arguments`)
-    );
-    // } else {
-    //   console.log("Running command");
-    // }
-
-    const process = spawn(command, args, { shell: true });
-    let output = "";
-    let error = "";
-
-    // Handle data on stdout
-    process.stdout.on("data", (data) => {
-      output += data.toString();
-    });
-
-    // Handle data on stderr (error stream)
-    process.stderr.on("data", (data) => {
-      error += data.toString();
-    });
-
-    // Handle the process exit
-    process.on("close", (code) => {
-      if (code !== 0) {
-        error = `Command failed with exit code ${code}: ${error}`;
-      }
-      resolve({ output, error });
-    });
-
-    process.on("error", (err) => {
-      error = `Process spawn error: ${err.message}`;
-      resolve({ output, error });
-    });
-  });
-}
 
 async function main() {
   const rl = readline.createInterface({
@@ -100,54 +31,32 @@ async function main() {
       console.error("Unexpected error:", error);
     }
   }
+
   if (userArgs?.help) {
     showHelp(DEFAULT_MODEL);
     return;
   }
+
   if (userArgs?.version) {
     getVersion();
     return;
   }
 
+  if (userArgs?.primary == Primary.EXECUTE) {
+    const commandList = getLastCommand().split(' ');
+    const mainCommand = commandList[0];
+    const commandArgs = commandList.slice(1);
+    const { output, error } = await runCommand(mainCommand, commandArgs, userArgs.verbose);
+    if (output) process.stdout.write(output);
+    if (error) process.stdout.write(error);
+  }
+
+  if (userArgs?.primary == Primary.CHECK) {
+    process.stdout.write("is in check mode\n");
+  }
+
   if (userArgs?.primary === Primary.SESSION) {
-    const configPath = "./config/config.json";
-    let configFile;
-    let config;
-    try {
-      configFile = fs.readFileSync(configPath, "utf8");
-      config = JSON.parse(configFile);
-    } catch (e) {
-      console.log("Error reading config file", e);
-    }
-    if (userArgs?.subCommand === SessionSubCommand.START) {
-      if (config.session) {
-        console.log("Session already started");
-        return;
-      }
-      console.log("Session started");
-      config.session = true;
-      console.log("Session state updated to true in config.json");
-    } else if (userArgs?.subCommand === SessionSubCommand.END) {
-      if (!config.session) {
-        console.log("No Session found");
-        return;
-      }
-      console.log("Session ended");
-      config.session = false;
-      console.log("Session state updated to false in config.json");
-    } else if (userArgs?.subCommand === SessionSubCommand.STATUS) {
-      if (!config.session) {
-        console.log("Session status: not running");
-      } else {
-        console.log("Session status: running");
-      }
-    }
-    try {
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-    } catch (e) {
-      console.log("Error writing to config file", e);
-    }
-    return;
+    handleSessionCommand(userArgs);
   }
 
   // const { output, error } = await runCommand(commandName, command, verbose);
@@ -214,3 +123,4 @@ main()
   .then(() => {
     process.exit(1);
   });
+

@@ -5,6 +5,8 @@ import ollama from "ollama";
 import { execSync } from "child_process";
 import { defaultPrompt } from "./data/defaultPrompt";
 import showHelp from "./components/help";
+import { SessionSubCommand, Flag } from "./util/constants";
+import { parseCLIArgs } from "./util/ArgParser";
 
 // Default Model
 const DEFAULT_MODEL = "deepseek-r1:1.5b";
@@ -43,7 +45,7 @@ function runCommand(
     // if (verbose) {
     console.log(
       `Running command: ${command} with` +
-        (args.length > 0 ? ` arguments: ` + args : ` no arguments`)
+      (args.length > 0 ? ` arguments: ` + args : ` no arguments`)
     );
     // } else {
     //   console.log("Running command");
@@ -103,76 +105,49 @@ async function queryOllama(
     console.error("Error querying Ollama:", error);
   }
 }
-
+import { CLIArgs } from "./util/CLIArgs"
+import { ArgumentError } from "./types/errors";
 async function main() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
-
-  const args = process.argv.slice(2);
-  if (args.includes("--help")) {
-    showHelp(DEFAULT_MODEL);
-    rl.close();
-    return;
-  }
-
-  const model =
-    args.find((arg) => arg.startsWith("--model="))?.split("=")[1] ||
-    DEFAULT_MODEL;
-  const prompt = args.find((arg) => arg.startsWith("--prompt="))?.split("=")[1];
-  const verbose = args.includes("--verbose");
-  if (verbose)
-    console.log("model:", model, ", prompt:", prompt ?? `"No prompt provided"`);
-
-  let command = prompt || getLastCommand();
-  let commandArgs: string[] = [];
-
-  // Split command into parts if it's from history
-  if (!args.includes(command)) {
-    // Command came from history
-    const parts = command.split(/\s+/);
-    command = parts[0];
-    commandArgs = parts.slice(1);
-  }
-
-  // Get remaining non-flag arguments for the command
-  const remainingArgs = args.filter(
-    (arg) =>
-      arg !== command &&
-      !arg.startsWith("--") &&
-      args.indexOf(arg) > args.indexOf(command)
-  );
-
-  commandArgs = commandArgs.concat(remainingArgs);
-
-  if (!command) {
-    process.stdout.write("No command found to run.");
-    rl.close();
-    return;
-  }
-
-  const { output, error } = await runCommand(command, commandArgs, verbose);
-  if (output) process.stdout.write(output);
-  if (error) process.stdout.write(error);
-
-  const answer: any = await new Promise((resolve) => {
-    rl.question(`Do you want ${model} to analyse this output? (y/n):`, resolve);
-  });
-
-  if (answer.toLowerCase() != "y" && answer.toLowerCase() != "yes") {
-    rl.close();
-    return;
-  }
-
-  let commandWithArguments = command;
-  args.slice(1).map((arg) => {
-    commandWithArguments += " " + arg;
-  });
-  const ollamaInput =
-    prompt || defaultPrompt(commandWithArguments, output, error);
-  await queryOllama(model, ollamaInput, verbose);
-
+  let args;
+  try {
+    args = parseCLIArgs();
+    // Use the parsed arguments
+  } catch (error) {
+    if (error instanceof ArgumentError) {
+      console.error(`Error (${error.code}): ${error.message}`);
+    } else {
+      console.error('Unexpected error:', error);
+    }
+  }  // echo 'hello'
+  console.log(args);
+  // const splitCommand = userArgs.commandStr?.split(' ');
+  // const commandName = splitCommand[0];
+  // const commandArgs = splitCommand?.slice(1);
+  // const { output, error } = await runCommand(commandName, command, verbose);
+  // if (output) process.stdout.write(output);
+  // if (error) process.stdout.write(error);
+  //
+  // const answer: any = await new Promise((resolve) => {
+  //   rl.question(`Do you want ${model} to analyse this output? (y/n):`, resolve);
+  // });
+  //
+  // if (answer.toLowerCase() != "y" && answer.toLowerCase() != "yes") {
+  //   rl.close();
+  //   return;
+  // }
+  //
+  // let commandWithArguments = command;
+  // args.slice(1).map((arg) => {
+  //   commandWithArguments += " " + arg;
+  // });
+  // const ollamaInput =
+  //   prompt || defaultPrompt(commandWithArguments, output, error);
+  // await queryOllama(model, ollamaInput, verbose);
+  //
   // dont remove the below commented code ill fix this later
 
   // console.log("Model response:", modelResponse); // Log the raw model response

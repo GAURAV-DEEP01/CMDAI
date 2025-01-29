@@ -1,16 +1,19 @@
 {
   "name": "clai",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/clai.js",
+  "bin": {
+    "clai": "dist/clai.js"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "dev": "npm run build && node dist/index.js"
+    "dev": "npm run build && node dist/clai.js --",
+    "prepare": "npm run build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "A CLI tool for AI-powered command analysis.",
   "devDependencies": {
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"

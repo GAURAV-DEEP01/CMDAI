@@ -1,6 +1,6 @@
 import fs from "fs";
-import { CLIArgs } from "./util/CLIArgs";
-import { SessionSubCommand } from "./util/constants";
+import { CLIArgs } from "./CLIArgs";
+import { SessionSubCommand } from "./constants";
 
 export function handleSessionCommand(userArgs: CLIArgs) {
   const configPath = "./config/config.json";

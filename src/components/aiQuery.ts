@@ -1,79 +1,168 @@
 import ollama from "ollama";
 
 interface CommandAnalysis {
-  error: string;
-  suggested_command: string;
   description: string;
   possible_fixes: string[];
   corrected_command: string;
   explanation?: string;
-  common_mistakes?: string[];
-  learning_resources?: string[];
 }
+
+const MAX_RETRIES = 3;
+
+const VALIDATION_SCHEMA = `// JSON Validation Requirements
+{
+  "description": "string (technical explanation)",
+  "possible_fixes": ["string", "...", "..."],
+  "corrected_command": "string (directly executable)",
+  "explanation": "string? (detailed analysis)",
+}`;
 
 export default async function aiQuery(
   model: string,
   input: string,
-  verbose: boolean = false
-) {
+  verbose: boolean = false,
+  retryCount: number = 0
+): Promise<CommandAnalysis> {
   try {
-    console.log(`Querying ${model} model...`);
+    console.log(`Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}`);
+
     const response = await ollama.chat({
       model,
-      messages: [{ role: "user", content: input }],
+      messages: [
+        {
+          role: "user",
+          content:
+            retryCount > 0
+              ? `${input}\n\nINVALID RESPONSE - CORRECT FORMAT:\n${VALIDATION_SCHEMA}`
+              : input,
+        },
+      ],
       stream: true,
     });
-    let thinkingLogged = false;
-    let aiOutput: string = "";
+
+    let aiOutput = "";
+    let flag = true;
     for await (const part of response) {
       aiOutput += part.message.content;
       if (!verbose) {
         process.stdout.write(part.message.content);
-      } else if (!thinkingLogged) {
-        console.log("Thinking...");
-        thinkingLogged = true;
+      } else if (flag) {
+        const loadingAnimation = ["|", "/", "-", "\\"];
+        let i = 0;
+        const interval = setInterval(() => {
+          process.stdout.write(
+            `\rThinking ${loadingAnimation[i++ % loadingAnimation.length]}`
+          );
+        }, 100);
+        flag = false;
+
+        // Clear the interval when the response is complete
+        (async () => {
+          for await (const part of response) {
+          }
+          clearInterval(interval);
+        })();
       }
     }
-    console.log("AI response received:\n", aiOutput);
 
-    return parseAnalysisResponse(aiOutput);
+    // console.log("\nRaw AI response:", aiOutput);
+    return validateAndParseResponse(aiOutput);
   } catch (error) {
-    console.error("Error querying Ollama:", error);
+    if (retryCount < MAX_RETRIES - 1) {
+      console.log(
+        `Retrying due to: ${error instanceof Error ? error.message : error}`
+      );
+      return aiQuery(model, input, verbose, retryCount + 1);
+    }
+    throw new Error(`Failed after ${MAX_RETRIES} attempts: ${error}`);
   }
 }
-export const parseAnalysisResponse = (response: string): CommandAnalysis => {
-  // Use regex to extract the JSON block between ```json and ```
-  const jsonMatch = response.match(/```json([\s\S]*?)```/);
-  if (!jsonMatch) {
-    throw new Error("No JSON found in AI output");
-  }
-
-  // Clean the JSON string
-  const jsonString = jsonMatch[1].trim();
-
+const validateAndParseResponse = (response: string): CommandAnalysis => {
   try {
-    // Parse the JSON string
-    const parsed = JSON.parse(jsonString) as CommandAnalysis;
-
-    // Validate required fields
-    if (
-      !parsed.error ||
-      !parsed.suggested_command ||
-      !parsed.description ||
-      !Array.isArray(parsed.possible_fixes) ||
-      !parsed.corrected_command
-    ) {
-      throw new Error("Invalid response format: missing required fields");
+    // Find the first instance of ```json
+    const jsonStartIndex = response.indexOf("```json");
+    if (jsonStartIndex === -1) {
+      throw new Error("No JSON block found in the response.");
     }
 
-    // Add defaults for optional fields
+    // Extract the content after ```json
+    const jsonContent = response.substring(jsonStartIndex + "```json".length);
+
+    // Find the closing ``` after the JSON block
+    const jsonEndIndex = jsonContent.indexOf("```");
+    if (jsonEndIndex === -1) {
+      throw new Error("No closing ``` found for the JSON block.");
+    }
+
+    // Extract the JSON string and clean it
+    const jsonString = jsonContent
+      .substring(0, jsonEndIndex) // Extract the JSON block
+      .trim() // Remove leading/trailing whitespace
+      .replace(/[\u2018\u2019]/g, "'") // Handle smart quotes
+      .replace(/[\u201C\u201D]/g, '"'); // Handle smart double quotes
+
+    // Parse the JSON string
+    const parsed: CommandAnalysis = JSON.parse(jsonString);
+
+    // Schema validation
+    const requiredFields = [
+      "description",
+      "possible_fixes",
+      "corrected_command",
+    ];
+
+    const missingFields = requiredFields.filter((field) => !(field in parsed));
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
+    }
+
+    // Command safety check
+    if (!isValidCommand(parsed.corrected_command)) {
+      throw new Error(`Invalid command: ${parsed.corrected_command}`);
+    }
+
+    // Type validation
+    if (!Array.isArray(parsed.possible_fixes)) {
+      throw new Error("possible_fixes must be an array");
+    }
+
+    // Enhanced validation
+    if (
+      parsed.corrected_command.includes("&&") ||
+      parsed.corrected_command.includes("||")
+    ) {
+      throw new Error("Compound commands are not allowed");
+    }
+
     return {
-      ...parsed,
+      description: parsed.description,
+      possible_fixes: parsed.possible_fixes,
+      corrected_command: sanitizeCommand(parsed.corrected_command),
       explanation: parsed.explanation || "",
-      common_mistakes: parsed.common_mistakes || [],
-      learning_resources: parsed.learning_resources || [],
     };
   } catch (error) {
-    throw new Error(`Failed to parse command analysis response: ${error}`);
+    throw new Error(
+      `Response validation failed: ${
+        error instanceof Error ? error.message : error
+      }`
+    );
   }
+};
+
+const isValidCommand = (command: string): boolean => {
+  const forbiddenPatterns = [
+    /rm\s+-rf/,
+    /;\s*$/,
+    /\b(wget|curl)\s+-O/,
+    /(\$\(|`)/,
+    />\s*\/dev/,
+  ];
+  return !forbiddenPatterns.some((pattern) => pattern.test(command));
+};
+
+const sanitizeCommand = (command: string): string => {
+  return command
+    .replace(/\bsudo\b/g, "") // Remove sudo for safety
+    .replace(/\s{2,}/g, " ") // Collapse multiple spaces
+    .trim();
 };

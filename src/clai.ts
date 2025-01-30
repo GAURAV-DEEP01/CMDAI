@@ -1,17 +1,15 @@
 #!/usr/bin/env node
-import { CLIArgs } from "./util/CLIArgs";
-import { spawn } from "child_process";
 import readline from "readline";
 import { getVersion, showHelp } from "./components/info";
-import { SessionSubCommand, Flag, Primary } from "./util/constants";
-import { parseCLIArgs } from "./util/ArgParser";
+import { Primary } from "./util/constants";
 
 import { ArgumentError } from "./types/errors";
-import fs, { write } from "fs";
 import { getLastCommand, runCommand } from "./util/commandHistory";
 import { handleSessionCommand } from "./util/handleSessionCommand";
 import { defaultPrompt } from "./data/defaultPrompt";
 import aiQuery from "./components/aiQuery";
+import { parseCLIArgs } from "./util/argParser";
+import { handleResponse } from "./components/handleResponse";
 
 // Default Model
 const DEFAULT_MODEL = "deepseek-r1:7b";
@@ -81,6 +79,8 @@ async function main() {
       userArgs.verbose
     );
     console.dir(response, { depth: null });
+    
+    await handleResponse(answer, rl);
   }
 
   if (userArgs?.primary == Primary.CHECK) {

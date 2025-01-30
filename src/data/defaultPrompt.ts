@@ -8,14 +8,10 @@ export const defaultPrompt = (
 1. JSON response MUST EXACTLY match this structure:
 \`\`\`json
 {
-  "error": "string (non-empty, specific error pattern)",
-  "suggested_command": "string (executable command with properly escaped characters)",
   "description": "string (50-200 characters, technical details)",
   "possible_fixes": ["string (concrete steps)", "...", "..."],
   "corrected_command": "string (directly executable verification-ready command)",
-  "explanation": "string (200-500 characters, cause-and-effect analysis)",
-  "common_mistakes": ["string (specific patterns)", "..."],
-  "learning_resources": ["url (https only)", "..."]
+  "explanation": "string (200-500 characters, cause-and-effect analysis)"
 }
 \`\`\`
 
@@ -30,6 +26,7 @@ export const defaultPrompt = (
 - No code comments
 - No placeholders
 - No trailing commas
+- No javascript/Typescript inside JSON for formatting
 - No ambiguous suggestions`;
 
   const basePrompt = `You are a mission-critical command-line validation engine. Analyze and respond EXCLUSIVELY with valid JSON following these rules:
@@ -58,8 +55,7 @@ Validation Protocol:
 
 Response Requirements:
 - corrected_command must pass \`shellcheck\` and \`shfmt\` validation
-- All URLs must use HTTPS and reference official docs
-- Array lengths: possible_fixes[3], common_mistakes[2], learning_resources[3]
+- Array lengths: possible_fixes[3]
 - String lengths enforced per field (see schema)
 - UTC timestamp: ${new Date().toISOString()}
 
@@ -67,7 +63,10 @@ Failure Consequences:
 Invalid responses will cause:
 1. Automated validation failure
 2. Security lockdown
-3. Incident reporting`;
+3. Incident reporting
+
+Response MUST be valid JSON with NO extra formatting or explanations outside the JSON structure.
+`;
 
   return userPrompt
     ? `${basePrompt}\n\nUser Context:\n${userPrompt}\n\nADAPTATION RULES:\n- Maintain JSON validity\n- Preserve schema structure\n- Keep timestamps\n- Sanitize user input`

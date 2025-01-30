@@ -44,7 +44,7 @@ export function runCommand(
         // Handle the process exit
         process.on("close", (code) => {
             if (code !== 0) {
-                error = `Command failed with exit code ${code}: ${error}`;
+                error = `Command failed with exit code ${code}:\n ${error}`;
             }
             resolve({ output, error });
         });
@@ -71,7 +71,6 @@ export function getLastCommand(): string {
             console.error("Unsupported shell. Please provide a command manually.");
             return "";
         }
-        console.log(historyCommand)
         return execSync(historyCommand, { shell: shell }).toString().trim();
     } catch (error) {
         console.error("Failed to fetch the last command from history.");

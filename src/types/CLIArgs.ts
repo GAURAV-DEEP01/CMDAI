@@ -1,4 +1,4 @@
-import { Primary, SessionSubCommand } from "./constants";
+import { Primary, SessionSubCommand } from "../util/constants";
 
 export interface CLIArgs {
     primary: Primary;

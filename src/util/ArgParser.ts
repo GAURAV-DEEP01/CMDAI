@@ -1,5 +1,5 @@
 import { Primary, Flag, SessionSubCommand } from "./constants";
-import { CLIArgs } from "./CLIArgs";
+import { CLIArgs } from "../types/CLIArgs";
 import { ArgumentError } from "../types/errors";
 
 // command combinations 

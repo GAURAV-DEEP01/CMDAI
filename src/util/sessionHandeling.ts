@@ -1,4 +1,4 @@
-import { CLIArgs } from "./CLIArgs";
+import { CLIArgs } from "../types/CLIArgs";
 import { SessionSubCommand } from "./constants";
 import fs from "fs";
 

@@ -42,6 +42,6 @@ export function showHelp(DEFAULT_MODEL: string) {
   `);
 }
 
-export function getVersion() {
+export function showVersion() {
   console.log("0.1.0");
 }

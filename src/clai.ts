@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 import readline from "readline";
-import { getVersion, showHelp } from "./components/info";
+import { showVersion, showHelp } from "./components/info";
 import { Primary } from "./util/constants";
 
 import { ArgumentError } from "./types/errors";
 import { getLastCommand, runCommand } from "./util/commandHistory";
-import { handleSessionCommand } from "./util/handleSessionCommand";
+import { handleSessionCommand } from "./util/sessionHandeling";
 import { defaultPrompt } from "./data/defaultPrompt";
 import aiQuery from "./components/aiQuery";
-import { parseCLIArgs } from "./util/argParser";
+import { parseCLIArgs } from "./util/ArgParser";
 import { handleResponse } from "./components/handleResponse";
 
 // Default Model
@@ -31,13 +31,15 @@ async function main() {
     }
   }
 
+  console.log(userArgs);
+
   if (userArgs?.help) {
     showHelp(DEFAULT_MODEL);
     return;
   }
 
   if (userArgs?.version) {
-    getVersion();
+    showVersion();
     return;
   }
 
@@ -79,7 +81,7 @@ async function main() {
       userArgs.verbose
     );
     console.dir(response, { depth: null });
-    
+
     await handleResponse(answer, rl);
   }
 

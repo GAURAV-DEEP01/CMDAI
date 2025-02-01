@@ -44,10 +44,21 @@ export default async function aiQuery(
     let flag = true;
     for await (const part of response) {
       aiOutput += part.message.content;
-      if (!verbose) {
+      if (verbose) {
         process.stdout.write(part.message.content);
       } else if (flag) {
-        const loadingAnimation = ["|", "/", "-", "\\"];
+        const loadingAnimation = [
+          "⠋",
+          "⠙",
+          "⠹",
+          "⠸",
+          "⠼",
+          "⠴",
+          "⠦",
+          "⠧",
+          "⠇",
+          "⠏",
+        ];
         let i = 0;
         const interval = setInterval(() => {
           process.stdout.write(

@@ -2,14 +2,13 @@
 import readline from "readline";
 import { showVersion, showHelp } from "./components/info";
 import { Primary } from "./util/constants";
-
 import { ArgumentError } from "./types/errors";
 import { getLastCommand, runCommand } from "./util/commandHistory";
 import { handleSessionCommand } from "./util/sessionHandeling";
 import { defaultPrompt } from "./data/defaultPrompt";
 import aiQuery from "./components/aiQuery";
-import { parseCLIArgs } from "./util/ArgParser";
 import { handleResponse } from "./components/handleResponse";
+import { parseCLIArgs } from "./util/argParser";
 
 // Default Model
 const DEFAULT_MODEL = "deepseek-r1:7b";
@@ -52,12 +51,20 @@ async function main() {
       commandArgs,
       userArgs.verbose
     );
+    // process.stdout.write("\n--- Output of Previous Command ---\n");
+
     if (output) process.stdout.write(output);
     if (error) process.stdout.write(error);
-    const answer: any = await new Promise((resolve) => {
+
+    const answer: string = await new Promise((resolve) => {
       rl.question(
-        `Do you want ${DEFAULT_MODEL} to analyse this output? (y/n):`,
-        resolve
+        `Do you want ${DEFAULT_MODEL} to analyse this output? (y/n): `,
+        (input) => {
+          if (input.toLowerCase() === "y" || input.toLowerCase() === "yes") {
+            clearLine(); // Clear the line if the user inputs 'y' or 'yes'
+          }
+          resolve(input);
+        }
       );
     });
 
@@ -75,6 +82,7 @@ async function main() {
       error,
       userArgs.prompt
     );
+
     const response = await aiQuery(
       DEFAULT_MODEL,
       ollamaInput,
@@ -82,7 +90,7 @@ async function main() {
     );
     console.dir(response, { depth: null });
 
-    await handleResponse(answer, rl);
+    await handleResponse(response, rl);
   }
 
   if (userArgs?.primary == Primary.CHECK) {
@@ -157,3 +165,10 @@ main()
   .then(() => {
     process.exit(1);
   });
+
+export const clearLine = () => {
+  // Move the cursor to the beginning of the line
+  readline.cursorTo(process.stdout, 0);
+  // Clear everything from the cursor to the end of the line
+  process.stdout.write("\x1B[K");
+};

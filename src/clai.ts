@@ -9,16 +9,41 @@ import { defaultPrompt } from "./data/defaultPrompt";
 import aiQuery from "./components/aiQuery";
 import { handleResponse } from "./components/handleResponse";
 import { parseCLIArgs } from "./util/argParser";
+import fs from "fs";
+import path from "path";
+import { CLIArgs } from "./types/CLIArgs";
 
 // Default Model
-const DEFAULT_MODEL = "deepseek-r1:7b";
+const homeDir = require("os").homedir();
+const configPath = path.join(homeDir, ".clai/config.json");
+
+if (!fs.existsSync(configPath)) {
+  fs.mkdirSync(path.dirname(configPath), { recursive: true });
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify(
+      {
+        version: "0.1.0",
+        session: true,
+        model: "deepseek-r1:7b",
+      },
+      null,
+      2
+    )
+  );
+  process.stdout.write("Config file created at ~/.clai/config.json\n");
+}
+
+const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+const DEFAULT_MODEL = config.model;
 
 async function main() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
-  let userArgs;
+
+  let userArgs: CLIArgs | undefined;
   try {
     userArgs = parseCLIArgs();
     // Use the parsed arguments
@@ -30,7 +55,7 @@ async function main() {
     }
   }
 
-  console.log(userArgs);
+  // console.log(userArgs);
 
   if (userArgs?.help) {
     showHelp(DEFAULT_MODEL);
@@ -58,7 +83,9 @@ async function main() {
 
     const answer: string = await new Promise((resolve) => {
       rl.question(
-        `Do you want ${DEFAULT_MODEL} to analyse this output? (y/n): `,
+        `Do you want ${
+          userArgs?.model || DEFAULT_MODEL
+        } to analyse this output? (y/n): `,
         (input) => {
           if (input.toLowerCase() === "y" || input.toLowerCase() === "yes") {
             clearLine(); // Clear the line if the user inputs 'y' or 'yes'
@@ -82,9 +109,10 @@ async function main() {
       error,
       userArgs.prompt
     );
+    // console.log(ollamaInput);
 
     const response = await aiQuery(
-      DEFAULT_MODEL,
+      userArgs.model || DEFAULT_MODEL,
       ollamaInput,
       userArgs.verbose
     );

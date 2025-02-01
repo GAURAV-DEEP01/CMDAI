@@ -41,7 +41,7 @@ export function runCommand(
     // Handle the spawnedProcess exit
     spawnedProcess.on("close", (code) => {
       if (code !== 0) {
-        error = `Command failed with exit code ${code}:\n ${error}`;
+        error = `Previous command failed with exit code ${code}:\n ${error}`;
       }
       resolve({ output, error });
     });

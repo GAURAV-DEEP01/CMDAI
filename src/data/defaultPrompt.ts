@@ -5,7 +5,7 @@ export const defaultPrompt = (
   userPrompt?: string
 ): string => {
   const validationSchema = `// VALIDATION RULES - STRICTLY ENFORCED
-1. JSON response MUST EXACTLY match this structure:
+1. JSON response MUST be wrapped in \`\`\`json code block and EXACTLY match this structure:
 \`\`\`json
 {
   "description": "string (50-200 characters, technical details)",
@@ -22,14 +22,14 @@ export const defaultPrompt = (
 - Validated against common security risks
 
 3. STRICT PROHIBITIONS:
-- No markdown formatting
-- No code comments
+- No markdown except required code fences
+- No code comments in JSON
 - No placeholders
 - No trailing commas
-- No javascript/Typescript inside JSON for formatting
+- No javascript/Typescript in JSON values
 - No ambiguous suggestions`;
 
-  const basePrompt = `You are a mission-critical command-line validation engine. Analyze and respond EXCLUSIVELY with valid JSON following these rules:
+  const basePrompt = `You are a mission-critical command-line validation engine. Analyze and respond EXCLUSIVELY with a JSON object wrapped in \`\`\`json code block following these rules:
 
 ${validationSchema}
 
@@ -54,6 +54,7 @@ Validation Protocol:
 7. Escape sequence verification: Validate quoting/escaping
 
 Response Requirements:
+- Start response with \`\`\`json and end with \`\`\`
 - corrected_command must pass \`shellcheck\` and \`shfmt\` validation
 - Array lengths: possible_fixes[3]
 - String lengths enforced per field (see schema)
@@ -65,11 +66,10 @@ Invalid responses will cause:
 2. Security lockdown
 3. Incident reporting
 
-Response MUST be valid JSON with NO extra formatting or explanations outside the JSON structure.
-`;
+Respond ONLY with the \`\`\`json code block containing valid JSON. No commentary before/after.`;
 
   return userPrompt
-    ? `${basePrompt}\n\nUser Context:\n${userPrompt}\n\nADAPTATION RULES:\n- Maintain JSON validity\n- Preserve schema structure\n- Keep timestamps\n- Sanitize user input`
+    ? `${basePrompt}\n\nUser Context:\n${userPrompt}\n\nADAPTATION RULES:\n- Maintain JSON code block structure\n- Preserve schema format\n- Keep timestamps\n- Sanitize user input`
     : basePrompt;
 };
 

@@ -1,4 +1,4 @@
-const test = {
+export const dummyResponse = {
   error: "The package '@types/nodesss' could not be found in the npm registry.",
   suggested_command: "npm install types@nodesss",
   description:

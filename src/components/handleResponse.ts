@@ -2,6 +2,7 @@ import clc from "cli-color";
 
 import { runCommand } from "../util/commandHistory";
 import { clearLine } from "../util/tools";
+import inquirer from "inquirer";
 
 export async function handleResponse(
   response: {
@@ -34,17 +35,17 @@ export async function handleResponse(
   );
 
   try {
-    const answer: string = await new Promise((resolve) => {
-      rl.question(
-        `Run: ${response.corrected_command}? (y/n): `,
-        (input: string) => {
-          clearLine();
-          resolve(input);
-        }
-      );
-    });
+    const answer = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "analyze",
+        message: `Run: ${response.corrected_command}? (y/n): `,
+        default: true,
+      },
+    ]);
+    clearLine();
 
-    if (answer === "y" || answer === "yes") {
+    if (answer.analyze) {
       const [mainCommand, ...commandArgs] =
         response.corrected_command.split(" ");
       const { output, error } = await runCommand(

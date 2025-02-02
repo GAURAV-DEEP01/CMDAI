@@ -3,7 +3,7 @@ import ollama from "ollama";
 import clc from "cli-color";
 import { clearLine, loadingAnimation } from "../util/tools";
 
-interface CommandAnalysis {
+export interface CommandAnalysis {
   description: string;
   possible_fixes: string[];
   corrected_command: string;
@@ -20,7 +20,7 @@ const VALIDATION_SCHEMA = `// JSON Validation Requirements
   "explanation": "string? (detailed analysis)",
 }`;
 
-export default async function aiQuery(
+export default async function queryLLM(
   model: string,
   input: string,
   verbose: boolean = false,
@@ -28,7 +28,7 @@ export default async function aiQuery(
 ): Promise<CommandAnalysis> {
   try {
     process.stdout.write(
-      `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\nn`
+      `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\n`
     );
 
     const response = await ollama.chat({
@@ -78,7 +78,7 @@ export default async function aiQuery(
       console.log(
         `Retrying: ${error instanceof Error ? error.message : error}`
       );
-      return aiQuery(model, input, verbose, retryCount + 1);
+      return queryLLM(model, input, verbose, retryCount + 1);
     }
     process.stderr.write(
       clc.red(
@@ -153,7 +153,8 @@ const validateAndParseResponse = (response: string): CommandAnalysis => {
     };
   } catch (error) {
     throw new Error(
-      `Response validation failed: ${error instanceof Error ? error.message : error
+      `Response validation failed: ${
+        error instanceof Error ? error.message : error
       }`
     );
   }

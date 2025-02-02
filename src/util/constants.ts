@@ -4,7 +4,7 @@ export enum Primary {
   SESSION = "session",
   CHECK = "check",
   EXECUTE = "execute",
-  EXECUTE_PREVIOUS = "execute_previous"
+  CONFIG = "config",
 }
 
 export enum SessionSubCommand {

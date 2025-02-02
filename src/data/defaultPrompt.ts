@@ -1,9 +1,9 @@
-export const defaultPrompt = (
+export function defaultPrompt(
   commandWithArguments: string,
   output: string,
   error: string,
   userPrompt?: string
-): string => {
+): string {
   const validationSchema = `// VALIDATION RULES - STRICTLY ENFORCED
 1. JSON response MUST be wrapped in \`\`\`json code block and EXACTLY match this structure:
 \`\`\`json
@@ -74,7 +74,7 @@ Respond ONLY with the \`\`\`json code block containing valid JSON. No commentary
 };
 
 // Helper function to detect shell environment
-const detectShellEnvironment = (error: string): string => {
+function detectShellEnvironment(error: string): string {
   const patterns = {
     bash: /(bash:|syntax error near unexpected token|declare -)/i,
     zsh: /(zsh:|no matches found:|bad pattern)/i,

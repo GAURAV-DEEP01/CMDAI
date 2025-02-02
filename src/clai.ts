@@ -11,7 +11,7 @@ import { handleResponse } from "./components/handleResponse";
 import { parseCLIArgs } from "./util/argParser";
 import fs from "fs";
 import path from "path";
-import { cliArgs } from "./types/cliArgs";
+import { CLIArgs } from "./types/cliArgs";
 import { clearLine } from "./util/tools";
 
 // Default Model
@@ -45,7 +45,7 @@ async function main() {
     output: process.stdout,
   });
 
-  let userArgs: cliArgs | null = null;
+  let userArgs: CLIArgs | null = null;
   try {
     userArgs = parseCLIArgs();
     // Use the parsed arguments
@@ -87,8 +87,7 @@ async function main() {
 
     const answer: string = await new Promise((resolve) => {
       rl.question(
-        `Do you want ${
-          userArgs.model || DEFAULT_MODEL
+        `Do you want ${userArgs.model || DEFAULT_MODEL
         } to analyse this output? (y/n): `,
         (input) => {
           clearLine(); // Clear the line if the user inputs 'y' or 'yes'

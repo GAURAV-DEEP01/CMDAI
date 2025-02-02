@@ -1,4 +1,4 @@
-import { ChildProcess, execSync, spawn } from "child_process";
+import { execSync, spawn } from "child_process";
 
 // Helper: Fetch the last command from shell history
 export function getSessionCommandLog(): string {

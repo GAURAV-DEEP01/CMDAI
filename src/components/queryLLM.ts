@@ -153,8 +153,7 @@ const validateAndParseResponse = (response: string): CommandAnalysis => {
     };
   } catch (error) {
     throw new Error(
-      `Response validation failed: ${
-        error instanceof Error ? error.message : error
+      `Response validation failed: ${error instanceof Error ? error.message : error
       }`
     );
   }

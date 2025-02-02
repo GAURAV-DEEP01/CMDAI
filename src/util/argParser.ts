@@ -1,5 +1,5 @@
 import { Primary, Flag, SessionSubCommand } from "./constants";
-import { cliArgs } from "../types/cliArgs";
+import { CLIArgs } from "../types/cliArgs";
 import { ArgumentError } from "../types/errors";
 
 // command combinations
@@ -18,7 +18,7 @@ import { ArgumentError } from "../types/errors";
 // clai --prompt="<prompt>" --verbose
 // clai --command="<command>" --prompt="<prompt>" --verbose
 
-export function parseCLIArgs(): cliArgs {
+export function parseCLIArgs(): CLIArgs {
   const args = process.argv.slice(2);
 
   // Handle empty args case
@@ -84,7 +84,6 @@ function normalizeArgs(args: string[]): string[] {
 
     i++;
   }
-
   return normalized;
 }
 
@@ -94,20 +93,20 @@ function findPrimaryCommand(args: string[]): Primary {
   return mapCommand(command || "");
 }
 
-function handleSpecialCases(primary: Primary, args: string[]): cliArgs | null {
+function handleSpecialCases(primary: Primary, args: string[]): CLIArgs | null {
   // Handle standalone flags
   if (args.length === 1) {
     if (args[0] === Flag.VERSION) {
-      return { primary: Primary.VERSION, version: true } as cliArgs;
+      return { primary: Primary.VERSION, version: true } as CLIArgs;
     }
     if (args[0] === Flag.HELP) {
-      return { primary: Primary.HELP, help: true } as cliArgs;
+      return { primary: Primary.HELP, help: true } as CLIArgs;
     }
   }
 
   // Handle check command
   if (primary === Primary.CHECK) {
-    const result: Partial<cliArgs> = { primary: Primary.CHECK };
+    const result: Partial<CLIArgs> = { primary: Primary.CHECK };
 
     let i = 0;
     while (i < args.length) {
@@ -134,13 +133,13 @@ function handleSpecialCases(primary: Primary, args: string[]): cliArgs | null {
       i++;
     }
 
-    return result as cliArgs;
+    return result as CLIArgs;
   }
 
   return null;
 }
 
-function parseSessionCommand(args: string[]): cliArgs {
+function parseSessionCommand(args: string[]): CLIArgs {
   // Remove any leading 'prompt' if present
   const relevantArgs = args.filter((arg) => arg !== "prompt");
 
@@ -164,7 +163,7 @@ function parseSessionCommand(args: string[]): cliArgs {
   return {
     primary: Primary.SESSION,
     subCommand,
-  } as cliArgs;
+  } as CLIArgs;
 }
 
 function validateNoExtraArgs(args: string[], command: Primary): void {
@@ -177,8 +176,8 @@ function validateNoExtraArgs(args: string[], command: Primary): void {
   }
 }
 
-function parseRegularCommand(args: string[], primary: Primary): cliArgs {
-  const result: Partial<cliArgs> = {
+function parseRegularCommand(args: string[], primary: Primary): CLIArgs {
+  const result: Partial<CLIArgs> = {
     primary: primary || Primary.EXECUTE,
   };
 
@@ -232,10 +231,10 @@ function parseRegularCommand(args: string[], primary: Primary): cliArgs {
 
   validateCommandCombinations(result);
 
-  return result as cliArgs;
+  return result as CLIArgs;
 }
 
-function validateCommandCombinations(args: Partial<cliArgs>): void {
+function validateCommandCombinations(args: Partial<CLIArgs>): void {
   // Validate help/version can't be combined with other flags
   if (args.help || args.version) {
     const hasOtherFlags = Object.keys(args).some(

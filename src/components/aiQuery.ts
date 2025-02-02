@@ -1,5 +1,8 @@
 import ollama from "ollama";
 
+import clc from "cli-color";
+import { clearLine, loadingAnimation } from "../util/tools";
+
 interface CommandAnalysis {
   description: string;
   possible_fixes: string[];
@@ -24,7 +27,9 @@ export default async function aiQuery(
   retryCount: number = 0
 ): Promise<CommandAnalysis> {
   try {
-    console.log(`Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}`);
+    process.stdout.write(
+      `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\nn`
+    );
 
     const response = await ollama.chat({
       model,
@@ -47,45 +52,40 @@ export default async function aiQuery(
       if (verbose) {
         process.stdout.write(part.message.content);
       } else if (flag) {
-        const loadingAnimation = [
-          "⠋",
-          "⠙",
-          "⠹",
-          "⠸",
-          "⠼",
-          "⠴",
-          "⠦",
-          "⠧",
-          "⠇",
-          "⠏",
-        ];
         let i = 0;
         const interval = setInterval(() => {
           process.stdout.write(
             `\rThinking ${loadingAnimation[i++ % loadingAnimation.length]}`
           );
-        }, 100);
+        }, 50);
         flag = false;
 
-        // Clear the interval when the response is complete
         (async () => {
           for await (const part of response) {
           }
           clearInterval(interval);
+          clearLine();
         })();
       }
     }
+    process.stdout.write("\n");
 
     // console.log("\nRaw AI response:", aiOutput);
     return validateAndParseResponse(aiOutput);
   } catch (error) {
+    clearLine();
     if (retryCount < MAX_RETRIES - 1) {
       console.log(
-        `Retrying due to: ${error instanceof Error ? error.message : error}`
+        `Retrying: ${error instanceof Error ? error.message : error}`
       );
       return aiQuery(model, input, verbose, retryCount + 1);
     }
-    throw new Error(`Failed after ${MAX_RETRIES} attempts: ${error}`);
+    process.stderr.write(
+      clc.red(
+        `Error: AI response validation failed after ${MAX_RETRIES} tries\n`
+      )
+    );
+    process.exit(1);
   }
 }
 const validateAndParseResponse = (response: string): CommandAnalysis => {

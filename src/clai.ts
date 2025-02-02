@@ -12,6 +12,7 @@ import { parseCLIArgs } from "./util/argParser";
 import fs from "fs";
 import path from "path";
 import { cliArgs } from "./types/cliArgs";
+import { clearLine } from "./util/tools";
 
 // Default Model
 const homeDir = require("os").homedir();
@@ -26,6 +27,7 @@ if (!fs.existsSync(configPath)) {
         version: "0.1.0",
         session: true,
         model: "deepseek-r1:7b",
+        api: "",
       },
       null,
       2
@@ -43,7 +45,7 @@ async function main() {
     output: process.stdout,
   });
 
-  let userArgs: cliArgs | undefined;
+  let userArgs: cliArgs | null = null;
   try {
     userArgs = parseCLIArgs();
     // Use the parsed arguments
@@ -55,19 +57,22 @@ async function main() {
     }
   }
 
-  // console.log(userArgs);
+  if (!userArgs) {
+    process.stderr.write("Error parsing arguments\n");
+    return;
+  }
 
-  if (userArgs?.help) {
+  if (userArgs.help) {
     showHelp(DEFAULT_MODEL);
     return;
   }
 
-  if (userArgs?.version) {
+  if (userArgs.version) {
     showVersion();
     return;
   }
 
-  if (userArgs?.primary == Primary.EXECUTE) {
+  if (userArgs.primary == Primary.EXECUTE) {
     const commandList = getLastCommand().split(" ");
     const mainCommand = commandList[0];
     const commandArgs = commandList.slice(1);
@@ -76,7 +81,6 @@ async function main() {
       commandArgs,
       userArgs.verbose
     );
-    // process.stdout.write("\n--- Output of Previous Command ---\n");
 
     if (output) process.stdout.write(output);
     if (error) process.stdout.write(error);
@@ -84,12 +88,10 @@ async function main() {
     const answer: string = await new Promise((resolve) => {
       rl.question(
         `Do you want ${
-          userArgs?.model || DEFAULT_MODEL
+          userArgs.model || DEFAULT_MODEL
         } to analyse this output? (y/n): `,
         (input) => {
-          if (input.toLowerCase() === "y" || input.toLowerCase() === "yes") {
-            clearLine(); // Clear the line if the user inputs 'y' or 'yes'
-          }
+          clearLine(); // Clear the line if the user inputs 'y' or 'yes'
           resolve(input);
         }
       );
@@ -121,11 +123,11 @@ async function main() {
     await handleResponse(response, rl);
   }
 
-  if (userArgs?.primary == Primary.CHECK) {
+  if (userArgs.primary == Primary.CHECK) {
     process.stdout.write("is in check mode\n");
   }
 
-  if (userArgs?.primary === Primary.SESSION) {
+  if (userArgs.primary === Primary.SESSION) {
     handleSessionCommand(userArgs);
   }
 
@@ -193,10 +195,3 @@ main()
   .then(() => {
     process.exit(1);
   });
-
-export const clearLine = () => {
-  // Move the cursor to the beginning of the line
-  readline.cursorTo(process.stdout, 0);
-  // Clear everything from the cursor to the end of the line
-  process.stdout.write("\x1B[K");
-};

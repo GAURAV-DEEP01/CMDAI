@@ -22,7 +22,7 @@ export function runCommand(
 ): Promise<{ output: string; error: string }> {
   return new Promise((resolve) => {
     if (verbose) {
-      process.stdout.write(`Running command: ${command} ${args.join(" ")}`);
+      process.stdout.write(`Running command: ${command} ${args.join(" ")}\n`);
     }
     const spawnedProcess = spawn(command, args, { shell: true });
     let output = "";
@@ -41,7 +41,7 @@ export function runCommand(
     // Handle the spawnedProcess exit
     spawnedProcess.on("close", (code) => {
       if (code !== 0) {
-        error = `Previous command failed with exit code ${code}:\n ${error}`;
+        error = `Previous command failed with exit code ${code}:\n${error}`;
       }
       resolve({ output, error });
     });

@@ -1,4 +1,7 @@
+import clc from "cli-color";
+
 import { runCommand } from "../util/commandHistory";
+import { clearLine } from "../util/tools";
 
 export async function handleResponse(
   response: {
@@ -10,24 +13,35 @@ export async function handleResponse(
   // todo type
   rl: any
 ) {
-  console.log("\n\x1b[1mValidation Result:\x1b[0m");
-  console.log(`\x1b[1;34mDescription:\x1b[0m ${response.description}\n`);
+  process.stdout.write(`${clc.bold.underline("Validation Results\n")}`);
+  process.stdout.write(
+    `\x1b[1;34mDescription:\x1b[0m ${response.description}\n`
+  );
 
   if (response.explanation) {
-    console.log(`\x1b[1;34mExplanation:\x1b[0m ${response.explanation}\n`);
+    process.stdout.write(
+      `\x1b[1;34mExplanation:\x1b[0m ${response.explanation}\n`
+    );
   }
 
-  console.log("\x1b[1;34mPossible Fixes:\x1b[0m");
+  process.stdout.write("\x1b[1;34mPossible Fixes:\x1b[0m");
   response.possible_fixes.forEach((fix, index) => {
-    console.log(`  ${index + 1}. ${fix}`);
-  });                                     
+    process.stdout.write(`  ${index + 1}. ${fix}`);
+  });
 
   console.log(
-    `\n\x1b[1;32mSuggested Command:\x1b[0m ${response.corrected_command}`
+    `\n\x1b[1;32mCorrected Command:\x1b[0m ${response.corrected_command}`
   );
+
   try {
-    const answer: any = await new Promise((resolve) => {
-      rl.question(`Run this command? (y/n):`, resolve);
+    const answer: string = await new Promise((resolve) => {
+      rl.question(
+        `Run: ${response.corrected_command}? (y/n): `,
+        (input: string) => {
+          clearLine();
+          resolve(input);
+        }
+      );
     });
 
     if (answer === "y" || answer === "yes") {

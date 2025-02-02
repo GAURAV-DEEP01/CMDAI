@@ -1,9 +1,11 @@
-import { Primary, Flag, SessionSubCommand } from "./constants";
+import { Primary, Flag, SessionSubCommand, ConfigSubCommand } from "../util/constants";
 import { CLIArgs } from "../types/cliArgs";
 import { ArgumentError } from "../types/errors";
 
 // command combinations
 // clai
+// clai config set
+// clai config get
 // clai session start
 // clai check
 // clai session end
@@ -18,32 +20,127 @@ import { ArgumentError } from "../types/errors";
 // clai --prompt="<prompt>" --verbose
 // clai --command="<command>" --prompt="<prompt>" --verbose
 
-export function parseCLIArgs(): CLIArgs {
-  const args = process.argv.slice(2);
 
-  // Handle empty args case
+// Command structure definition for easy extension
+const commandStructure: any = {
+  [Primary.SESSION]: {
+    subCommands: Object.values(SessionSubCommand),
+    flags: [Flag.VERBOSE]
+  },
+  [Primary.CONFIG]: {
+    subCommands: Object.values(ConfigSubCommand),
+    flags: [Flag.KEY, Flag.VALUE, Flag.VERBOSE]
+  },
+  [Primary.CHECK]: {
+    flags: [Flag.PROMPT, Flag.VERBOSE]
+  },
+  [Primary.EXECUTE]: {
+    flags: [Flag.COMMAND, Flag.PROMPT, Flag.MODEL, Flag.VERBOSE]
+  }
+};
+
+export function parseCLIArgs(): CLIArgs {
+  const args = normalizeArgs(process.argv.slice(2));
+
   if (args.length === 0) {
     return { primary: Primary.EXECUTE };
   }
 
-  // NORMALIZE ARGS BY COMBINING QUOTED VALUES AND HANDLING ESCAPED QUOTES
-  const normalizedArgs = normalizeArgs(args);
+  const primary = findPrimaryCommand(args);
+  const specialResult = handleSpecialCases(primary, args);
+  if (specialResult) return specialResult;
 
-  // Extract primary command (first non-flag argument)
-  const primaryCommand = findPrimaryCommand(normalizedArgs);
-
-  // Handle special cases first
-  const specialCaseResult = handleSpecialCases(primaryCommand, normalizedArgs);
-  if (specialCaseResult) {
-    return specialCaseResult;
+  // Handle commands with subcommands
+  switch (primary) {
+    case Primary.SESSION:
+      return parseSubCommand(args, Primary.SESSION, SessionSubCommand);
+    case Primary.CONFIG:
+      return parseSubCommand(args, Primary.CONFIG, ConfigSubCommand);
   }
 
-  // Parse based on primary command type
-  if (primaryCommand === Primary.SESSION) {
-    return parseSessionCommand(normalizedArgs);
+  return parseRegularCommand(args, primary);
+}
+
+// Generic subcommand parser
+function parseSubCommand<T>(
+  args: string[],
+  primary: Primary,
+  subCommandEnum: Record<string, T>
+): CLIArgs {
+  const subCommandArg = args.find(arg => Object.values(subCommandEnum).includes(arg as T));
+  if (!subCommandArg) {
+    throw new ArgumentError(
+      `Missing subcommand for ${primary}, expected: ${Object.values(subCommandEnum).join(", ")}`,
+      "MISSING_SUBCOMMAND"
+    );
   }
 
-  return parseRegularCommand(normalizedArgs, primaryCommand);
+  const flags = parseFlags(args, primary);
+  validateCommandStructure(primary, flags, subCommandArg as T);
+
+  return {
+    primary,
+    subCommand: subCommandArg as T,
+    ...flags
+  } as CLIArgs;
+}
+
+// Generic flag parser
+function parseFlags(args: string[], primary: Primary): Partial<CLIArgs> {
+  const result: Partial<CLIArgs> = {};
+  const allowedFlags = commandStructure[primary]?.flags || [];
+
+  for (const arg of args) {
+    if (!arg.startsWith("--")) continue;
+
+    const [flag, value] = parseFlagValue(arg);
+
+    if (!allowedFlags.includes(flag as Flag)) {
+      throw new ArgumentError(`Invalid flag for ${primary}: ${flag}`, "INVALID_FLAG");
+    }
+
+    switch (flag) {
+      case Flag.KEY:
+      case Flag.VALUE:
+      case Flag.PROMPT:
+      case Flag.COMMAND:
+      case Flag.MODEL:
+        if (!value) throw new ArgumentError(`Flag ${flag} requires a value`, "MISSING_VALUE");
+        result[flag.substring(2).toLowerCase() as keyof CLIArgs] = value as any;
+        break;
+      case Flag.VERBOSE:
+        result.verbose = true;
+        break;
+    }
+  }
+
+  return result;
+}
+
+function validateCommandStructure(primary: Primary, flags: Partial<CLIArgs>, subCommand?: any) {
+  const structure = commandStructure[primary];
+  if (!structure) return;
+}
+
+// Helper functions remain similar but updated for generic handling
+function parseFlagValue(arg: string): [string, string] {
+  const [flag, ...valueParts] = arg.split("=");
+  return [flag, valueParts.join("=")];
+}
+
+function findPrimaryCommand(args: string[]): Primary {
+  // Updated mapping
+  const commandMap: Record<string, Primary> = {
+    help: Primary.HELP,
+    version: Primary.VERSION,
+    session: Primary.SESSION,
+    check: Primary.CHECK,
+    config: Primary.CONFIG,
+    prompt: Primary.EXECUTE
+  };
+
+  const cmd = args.find(arg => commandMap[arg]);
+  return cmd ? commandMap[cmd] : Primary.EXECUTE;
 }
 
 function normalizeArgs(args: string[]): string[] {
@@ -85,12 +182,6 @@ function normalizeArgs(args: string[]): string[] {
     i++;
   }
   return normalized;
-}
-
-function findPrimaryCommand(args: string[]): Primary {
-  // find first non-flag argument
-  const command = args.find((arg) => !arg.startsWith("--"));
-  return mapCommand(command || "");
 }
 
 function handleSpecialCases(primary: Primary, args: string[]): CLIArgs | null {
@@ -235,7 +326,6 @@ function parseRegularCommand(args: string[], primary: Primary): CLIArgs {
 }
 
 function validateCommandCombinations(args: Partial<CLIArgs>): void {
-  // Validate help/version can't be combined with other flags
   if (args.help || args.version) {
     const hasOtherFlags = Object.keys(args).some(
       (key) => key !== "help" && key !== "version" && key !== "primary",
@@ -247,18 +337,6 @@ function validateCommandCombinations(args: Partial<CLIArgs>): void {
       );
     }
   }
-}
-
-function mapCommand(cmd: string): Primary {
-  const commandMap: Record<string, Primary> = {
-    help: Primary.HELP,
-    version: Primary.VERSION,
-    session: Primary.SESSION,
-    check: Primary.CHECK,
-    prompt: Primary.EXECUTE,
-  };
-
-  return commandMap[cmd] || Primary.EXECUTE;
 }
 
 function mapSessionSubCommand(cmd: string): SessionSubCommand | undefined {

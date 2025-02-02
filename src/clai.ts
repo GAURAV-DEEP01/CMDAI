@@ -6,7 +6,7 @@ import { ArgumentError } from "./types/errors";
 import { getLastCommand, runCommand } from "./util/commandHistory";
 import { handleSessionCommand } from "./util/sessionHandeling";
 import { defaultPrompt } from "./data/defaultPrompt";
-import aiQuery from "./components/aiQuery";
+import aiQuery from "./components/queryLLM";
 import { handleResponse } from "./components/handleResponse";
 import { parseCLIArgs } from "./util/argParser";
 import fs from "fs";
@@ -193,4 +193,4 @@ main()
   })
   .then(() => {
     process.exit(1);
-  });
+  })

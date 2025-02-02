@@ -23,6 +23,9 @@ const VALIDATION_SCHEMA = `// JSON Validation Requirements
 export default async function queryLLM(
   model: string,
   input: string,
+
+  //todo create custom prompt when true
+  isDefaultPrompt: boolean,
   verbose: boolean = false,
   retryCount: number = 0
 ): Promise<CommandAnalysis> {
@@ -30,7 +33,8 @@ export default async function queryLLM(
     process.stdout.write(
       `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\n`
     );
-// todo writing thinking here
+
+    process.stdout.write(`Thinking`);
     const response = await ollama.chat({
       model,
       messages: [
@@ -44,50 +48,54 @@ export default async function queryLLM(
       ],
       stream: true,
     });
+    clearLine();
 
     let aiOutput = "";
-    let flag = true;
-    for await (const part of response) {
-      aiOutput += part.message.content;
-      if (verbose) {
-        process.stdout.write(part.message.content);
-      } else if (flag) {
-        let i = 0;
-        const interval = setInterval(() => {
-          process.stdout.write(
-            `\rThinking ${loadingAnimation[i++ % loadingAnimation.length]}`
-          );
-        }, 50);
-        flag = false;
+    let interval: NodeJS.Timeout | null = null;
 
-        (async () => {
-          for await (const part of response) {
-          }
-          clearInterval(interval);
-          clearLine();
-        })();
+    // Start loading animation if not verbose
+    if (!verbose) {
+      let i = 0;
+      interval = setInterval(() => {
+        process.stdout.write(
+          `\rThinking ${loadingAnimation[i++ % loadingAnimation.length]}`
+        );
+      }, 50);
+    }
+
+    try {
+      for await (const part of response) {
+        aiOutput += part.message.content;
+        if (verbose) {
+          process.stdout.write(part.message.content);
+        }
+      }
+    } finally {
+      // Cleanup loading animation
+      if (interval) {
+        clearInterval(interval);
+        clearLine();
       }
     }
-    process.stdout.write("\n");
 
-    // console.log("\nRaw AI response:", aiOutput);
+    process.stdout.write("\n");
     return validateAndParseResponse(aiOutput);
   } catch (error) {
-    clearLine();
     if (retryCount < MAX_RETRIES - 1) {
       console.log(
         `Retrying: ${error instanceof Error ? error.message : error}`
       );
-      return queryLLM(model, input, verbose, retryCount + 1);
+      return queryLLM(model, input, isDefaultPrompt, verbose, retryCount + 1);
     }
     process.stderr.write(
       clc.red(
         `Error: AI response validation failed after ${MAX_RETRIES} tries\n`
       )
     );
-    process.exit(1);
+    process.exit(0);
   }
 }
+
 const validateAndParseResponse = (response: string): CommandAnalysis => {
   try {
     // Find the first instance of ```json

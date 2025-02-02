@@ -10,26 +10,32 @@ export async function analyzeCommandExecution(params: {
   customPrompt?: string;
   verbose?: boolean;
 }) {
-  const analysisPrompt = params.customPrompt
-    ? params.customPrompt
+  const input = params.customPrompt
+    ? defaultPrompt(
+        params.command,
+        params.output,
+        params.error,
+        params.customPrompt
+      )
     : defaultPrompt(params.command, params.output, params.error);
-
-  if (params.verbose) {
-    console.log("\nAnalysis Prompt:\n", analysisPrompt);
-  }
+  const isDefaultPrompt = !!params.customPrompt;
 
   try {
     const response = await queryLLM(
       params.model,
-      analysisPrompt,
-      params.verbose
+      input,
+      isDefaultPrompt,
+      params.verbose,
+      0
     );
 
     // Handle the LLM response
     await handleResponse(response);
-
   } catch (error) {
-    console.error("\nAnalysis failed:", error instanceof Error ? error.message : "Unknown error");
+    console.error(
+      "\nAnalysis failed:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
     process.exit(1);
   }
 }

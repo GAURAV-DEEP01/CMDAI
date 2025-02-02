@@ -1,16 +1,13 @@
 #!/usr/bin/env node
+import { analyzeCommandExecution } from "./util/analysisHandler";
 import readline from "readline";
 import { showVersion, showHelp } from "./components/info";
 import { Primary } from "./util/constants";
 import { ArgumentError, CommandExecutionError } from "./types/errors";
 import { getLastCommand, runCommand } from "./util/commandHistory";
 import { handleSessionCommand } from "./util/sessionHandeling";
-import { defaultPrompt } from "./data/defaultPrompt";
-import { handleResponse } from "./components/handleResponse";
 import { parseCLIArgs } from "./util/argParser";
 import { CLIArgs } from "./types/cliArgs";
-import { clearLine, validateModelName } from "./util/tools";
-import queryLLM, { CommandAnalysis } from "./components/queryLLM";
 import { initializeConfig } from "./util/configHandler";
 import inquirer from "inquirer";
 
@@ -28,7 +25,8 @@ async function main() {
 
   try {
     const config = await initializeConfig();
-    const DEFAULT_MODEL = config.model || "llama2";
+    // todo fix default model
+    const DEFAULT_MODEL = config.model || "deepseek-r1:7b";
 
     let userArgs: CLIArgs;
     try {
@@ -62,16 +60,17 @@ async function main() {
     }
 
     if (userArgs.primary === Primary.EXECUTE) {
-      handleExecuteCommand(userArgs)
+      handleExecuteCommand(userArgs);
     }
 
     if (userArgs.primary === Primary.CHECK) {
       // Implement comprehensive system check logic here
       console.log("System check passed");
     }
-
   } catch (error) {
-    console.error(`Unexpected error: ${error instanceof Error ? error.message : error}`);
+    console.error(
+      `Unexpected error: ${error instanceof Error ? error.message : error}`
+    );
     process.exit(1);
   } finally {
     rl.close();
@@ -82,9 +81,6 @@ main().catch((err) => {
   console.error("Critical error during execution:", err);
   process.exit(1);
 });
-
-import { executeCommand } from "./util/commandExecutor";
-import { analyzeCommandExecution } from "./util/analysisHandler";
 
 async function handleExecuteCommand(userArgs: CLIArgs) {
   try {
@@ -102,7 +98,7 @@ async function handleExecuteCommand(userArgs: CLIArgs) {
 
     // Execute the command
     const [mainCommand, ...commandArgs] = commandStr.split(/\s+/);
-    const { output, error } = await executeCommand(
+    const { output, error } = await runCommand(
       mainCommand,
       commandArgs,
       userArgs.verbose
@@ -124,7 +120,7 @@ async function handleExecuteCommand(userArgs: CLIArgs) {
         error,
         model: userArgs.model as string,
         customPrompt: userArgs.prompt,
-        verbose: userArgs.verbose
+        verbose: userArgs.verbose,
       });
     }
   } catch (error) {
@@ -133,12 +129,14 @@ async function handleExecuteCommand(userArgs: CLIArgs) {
 }
 
 async function promptForAnalysis(model?: string): Promise<boolean> {
-  const { analyze } = await inquirer.prompt([{
-    type: "confirm",
-    name: "analyze",
-    message: `Run analysis with ${model || 'default model'}?`,
-    default: true
-  }]);
+  const { analyze } = await inquirer.prompt([
+    {
+      type: "confirm",
+      name: "analyze",
+      message: `Run analysis with ${model || "default model"}?`,
+      default: true,
+    },
+  ]);
   return analyze;
 }
 
@@ -148,6 +146,8 @@ function handleExecuteError(error: unknown) {
     process.exit(error.exitCode);
   }
 
-  process.stderr.write(`\nError: ${error instanceof Error ? error.message : 'Unknown error'}\n`);
+  process.stderr.write(
+    `\nError: ${error instanceof Error ? error.message : "Unknown error"}\n`
+  );
   process.exit(1);
 }

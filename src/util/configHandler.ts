@@ -9,6 +9,7 @@ type Config = {
   model: string;
   apiKey?: string;
   ollamaBaseUrl?: string;
+  session: boolean;
 };
 
 const homeDir = os.homedir();
@@ -113,6 +114,7 @@ async function runSetup() {
         ? answers.ollamaModel
         : answers.apiModel,
     ollamaBaseUrl: answers.ollamaBaseUrl,
+    session: false,
   };
 
   if (answers.providerType === "api") {

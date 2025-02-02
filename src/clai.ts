@@ -11,7 +11,7 @@ import { handleResponse } from "./components/handleResponse";
 import { parseCLIArgs } from "./util/argParser";
 import fs from "fs";
 import path from "path";
-import { CLIArgs } from "./types/CLIArgs";
+import { cliArgs } from "./types/cliArgs";
 
 // Default Model
 const homeDir = require("os").homedir();
@@ -43,7 +43,7 @@ async function main() {
     output: process.stdout,
   });
 
-  let userArgs: CLIArgs | undefined;
+  let userArgs: cliArgs | undefined;
   try {
     userArgs = parseCLIArgs();
     // Use the parsed arguments

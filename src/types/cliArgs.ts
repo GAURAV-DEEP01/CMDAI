@@ -1,6 +1,6 @@
 import { Primary, SessionSubCommand } from "../util/constants";
 
-export interface CLIArgs {
+export interface cliArgs {
     primary: Primary;
     subCommand?: SessionSubCommand;
     model?: string;

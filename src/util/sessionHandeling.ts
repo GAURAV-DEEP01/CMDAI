@@ -1,8 +1,8 @@
-import { CLIArgs } from "../types/CLIArgs";
+import { cliArgs } from "../types/cliArgs";
 import { SessionSubCommand } from "./constants";
 import fs from "fs";
 
-export function handleSessionCommand(userArgs: CLIArgs) {
+export function handleSessionCommand(userArgs: cliArgs) {
   const configPath = "./config/config.json";
   let configFile;
   let config;

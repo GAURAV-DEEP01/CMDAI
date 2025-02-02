@@ -1,19 +1,12 @@
 import { execSync, spawn } from "child_process";
+import inquirer from "inquirer";
+import { clearLine } from "../util/tools";
 
 // Helper: Fetch the last command from shell history
 export function getSessionCommandLog(): string {
   //to do retuns log of
   return "getsessioncommand";
 }
-
-//   main()
-//    if !session or and check
-//      exit
-//    if session and check
-//
-//clai
-//clai --command="echo 'hello'"
-//clai check
 
 export function runCommand(
   command: string,
@@ -27,7 +20,6 @@ export function runCommand(
     const spawnedProcess = spawn(command, args, { shell: true });
     let output = "";
     let error = "";
-
     // Handle data on stdout
     spawnedProcess.stdout.on("data", (data) => {
       output += data.toString();
@@ -37,6 +29,22 @@ export function runCommand(
     spawnedProcess.stderr.on("data", (data) => {
       error += data.toString();
     });
+    setTimeout(async () => {
+      const answer = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "analyze",
+          message: `Do you want to kill the process?`,
+          default: true,
+        },
+      ]);
+      clearLine();
+
+      if (answer.analyze) {
+        spawnedProcess.kill();
+      }
+    }, 10000);
+
 
     // Handle the spawnedProcess exit
     spawnedProcess.on("close", (code) => {

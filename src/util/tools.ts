@@ -1,5 +1,3 @@
-import clc from "cli-color";
-
 export const loadingAnimation = [
   "⠋",
   "⠙",

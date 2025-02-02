@@ -30,7 +30,7 @@ export default async function queryLLM(
     process.stdout.write(
       `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\n`
     );
-
+// todo writing thinking here
     const response = await ollama.chat({
       model,
       messages: [

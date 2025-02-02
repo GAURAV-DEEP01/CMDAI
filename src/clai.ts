@@ -15,7 +15,6 @@ import { initializeConfig } from "./util/configHandler";
 import inquirer from "inquirer";
 
 async function main() {
-  
   const config = await initializeConfig();
   const DEFAULT_MODEL = config.model;
 
@@ -50,6 +49,13 @@ async function main() {
     showVersion();
     return;
   }
+
+  // if (userArgs.primary === Primary.CONFIG) {
+  //   if (userArgs.subCommand === "set") {
+  //     runSetup();
+  //   } else {
+  //   }
+  // }
 
   if (userArgs.primary == Primary.EXECUTE) {
     const commandList = getLastCommand().split(" ");

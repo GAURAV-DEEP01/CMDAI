@@ -21,6 +21,9 @@ const DEFAULT_OLLAMA_MODELS = ["llama2", "mistral", "codellama"];
 const API_PROVIDERS = {
   openai: ["gpt-3.5-turbo", "gpt-4"],
   anthropic: ["claude-2", "claude-instant"],
+  // todo fix this
+  google: ["t5-3b", "t5-11b"],
+  DeepSeek: ["deepseek-1", "deepseek-2"],
 };
 
 async function initializeConfig() {
@@ -51,7 +54,7 @@ async function runSetup() {
       message: "Choose your LLM provider:",
       choices: [
         { name: "Local Ollama", value: "ollama" },
-        { name: "Cloud API", value: "api" },
+        { name: "Custom cloud API", value: "api" },
       ],
     },
     {
@@ -69,6 +72,9 @@ async function runSetup() {
       choices: async (answers) => {
         try {
           const response = await axios.get(`${answers.ollamaBaseUrl}/api/tags`);
+          if (!response.data.models) {
+            throw new Error("Invalid response from Ollama");
+          }
           return response.data.models.map((m: any) => m.name);
         } catch (error) {
           console.log("⚠️  Could not connect to Ollama. Using default models");
@@ -76,15 +82,6 @@ async function runSetup() {
         }
       },
       when: (answers) => answers.providerType === "ollama",
-    },
-    {
-      type: "input",
-      name: "customOllamaModel",
-      message: "Enter custom model name:",
-      when: (answers) =>
-        answers.providerType === "ollama" &&
-        !DEFAULT_OLLAMA_MODELS.includes(answers.ollamaModel!),
-      validate: (input) => !!input.trim(),
     },
     {
       type: "list",
@@ -113,7 +110,7 @@ async function runSetup() {
     provider: answers.providerType,
     model:
       answers.providerType === "ollama"
-        ? answers.customOllamaModel || answers.ollamaModel
+        ? answers.ollamaModel
         : answers.apiModel,
     ollamaBaseUrl: answers.ollamaBaseUrl,
   };
@@ -130,7 +127,7 @@ async function runSetup() {
   }
 
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
-  console.log(`\n✅ Configuration saved to ${CONFIG_PATH}`);
+  console.log(`\n✅ Configuration saved to ${CONFIG_PATH}\n`);
 }
 
 function isValidUrl(url: string) {

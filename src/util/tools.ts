@@ -17,3 +17,10 @@ export function clearLine() {
   process.stdout.write("\r");
   process.stdout.write("\x1b[1B\n");
 }
+
+export function validateModelName(modelName: string): boolean {
+  // Basic validation for model name format
+  const validModelPattern = /^[a-z0-9\-_:]+$/i;
+  return validModelPattern.test(modelName);
+}
+

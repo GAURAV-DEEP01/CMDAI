@@ -12,7 +12,7 @@ export async function handleResponse(
     explanation?: string;
   },
   // todo type
-  rl: any
+  rl?: any
 ) {
   process.stdout.write(`${clc.bold.underline("Validation Results\n")}`);
   process.stdout.write(

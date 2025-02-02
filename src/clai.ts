@@ -2,126 +2,152 @@
 import readline from "readline";
 import { showVersion, showHelp } from "./components/info";
 import { Primary } from "./util/constants";
-import { ArgumentError } from "./types/errors";
+import { ArgumentError, CommandExecutionError } from "./types/errors";
 import { getLastCommand, runCommand } from "./util/commandHistory";
 import { handleSessionCommand } from "./util/sessionHandeling";
 import { defaultPrompt } from "./data/defaultPrompt";
 import { handleResponse } from "./components/handleResponse";
 import { parseCLIArgs } from "./util/argParser";
 import { CLIArgs } from "./types/cliArgs";
-import { clearLine } from "./util/tools";
+import { clearLine, validateModelName } from "./util/tools";
 import queryLLM, { CommandAnalysis } from "./components/queryLLM";
 import { initializeConfig } from "./util/configHandler";
 import inquirer from "inquirer";
 
-async function main() {
-  const config = await initializeConfig();
-  const DEFAULT_MODEL = config.model;
+// Handle uncaught promise rejections
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
 
+async function main() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
 
-  let userArgs: CLIArgs | null = null;
   try {
-    userArgs = parseCLIArgs();
-    // Use the parsed arguments
-  } catch (error) {
-    if (error instanceof ArgumentError) {
-      console.error(`Error (${error.code}): ${error.message}`);
-    } else {
-      console.error("Unexpected error:", error);
+    const config = await initializeConfig();
+    const DEFAULT_MODEL = config.model || "llama2";
+
+    let userArgs: CLIArgs;
+    try {
+      userArgs = parseCLIArgs();
+    } catch (error) {
+      if (error instanceof ArgumentError) {
+        console.error(`Error (${error.code}): ${error.message}`);
+      } else {
+        console.error("Unexpected error during argument parsing:", error);
+      }
+      process.exit(1);
     }
+
+    if (userArgs.help) {
+      showHelp(DEFAULT_MODEL);
+      process.exit(0);
+    }
+
+    if (userArgs.version) {
+      showVersion();
+      process.exit(0);
+    }
+
+    if (userArgs.primary === Primary.SESSION) {
+      handleSessionCommand(userArgs);
+      process.exit(0);
+    }
+
+    if (!userArgs.model) {
+      userArgs.model = DEFAULT_MODEL;
+    }
+
+    if (userArgs.primary === Primary.EXECUTE) {
+      handleExecuteCommand(userArgs)
+    }
+
+    if (userArgs.primary === Primary.CHECK) {
+      // Implement comprehensive system check logic here
+      console.log("System check passed");
+    }
+
+  } catch (error) {
+    console.error(`Unexpected error: ${error instanceof Error ? error.message : error}`);
+    process.exit(1);
+  } finally {
+    rl.close();
   }
+}
 
-  if (!userArgs) {
-    process.stderr.write("Error parsing arguments\n");
-    return;
-  }
+main().catch((err) => {
+  console.error("Critical error during execution:", err);
+  process.exit(1);
+});
 
-  if (userArgs.help) {
-    showHelp(DEFAULT_MODEL);
-    return;
-  }
+import { executeCommand } from "./util/commandExecutor";
+import { analyzeCommandExecution } from "./util/analysisHandler";
 
-  if (userArgs.version) {
-    showVersion();
-    return;
-  }
+async function handleExecuteCommand(userArgs: CLIArgs) {
+  try {
+    // Determine command source
+    const commandStr = userArgs.commandStr || getLastCommand();
 
-  // if (userArgs.primary === Primary.CONFIG) {
-  //   if (userArgs.subCommand === "set") {
-  //     runSetup();
-  //   } else {
-  //   }
-  // }
+    if (!commandStr) {
+      throw new Error("No command provided and no history found");
+    }
 
-  if (userArgs.primary == Primary.EXECUTE) {
-    const commandList = getLastCommand().split(" ");
-    const mainCommand = commandList[0];
-    const commandArgs = commandList.slice(1);
-    const { output, error } = await runCommand(
+    // Validate command input
+    if (commandStr.trim().length === 0) {
+      throw new Error("Empty command provided");
+    }
+
+    // Execute the command
+    const [mainCommand, ...commandArgs] = commandStr.split(/\s+/);
+    const { output, error } = await executeCommand(
       mainCommand,
       commandArgs,
       userArgs.verbose
     );
 
-    if (output) process.stdout.write(output);
-    if (error) process.stdout.write(error);
+    // Display results
+    if (output) process.stdout.write(`\n${output}\n`);
+    if (error) process.stderr.write(`\n${error}\n`);
 
-    const answer = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "analyze",
-        message: `Do you want ${
-          userArgs?.model || DEFAULT_MODEL
-        } to analyse this output?`,
-        default: true,
-      },
-    ]);
-    clearLine();
+    // Determine if analysis should proceed
+    const shouldAnalyze = userArgs.prompt
+      ? true // Auto-analyze if custom prompt provided
+      : await promptForAnalysis(userArgs.model);
 
-    if (!answer.analyze) {
-      rl.close();
-      return;
+    if (shouldAnalyze) {
+      await analyzeCommandExecution({
+        command: commandStr,
+        output,
+        error,
+        model: userArgs.model as string,
+        customPrompt: userArgs.prompt,
+        verbose: userArgs.verbose
+      });
     }
-
-    let commandWithArguments = mainCommand;
-    commandArgs.map((arg) => {
-      commandWithArguments += " " + arg;
-    });
-    const ollamaInput = defaultPrompt(
-      commandWithArguments,
-      output,
-      error,
-      userArgs.prompt
-    );
-
-    const response: CommandAnalysis = await queryLLM(
-      userArgs.model || DEFAULT_MODEL,
-      ollamaInput,
-      userArgs.verbose
-    );
-
-    await handleResponse(response, rl);
+  } catch (error) {
+    handleExecuteError(error);
   }
-
-  if (userArgs.primary == Primary.CHECK) {
-    process.stdout.write("is in check mode\n");
-  }
-
-  if (userArgs.primary === Primary.SESSION) {
-    handleSessionCommand(userArgs);
-  }
-
-  rl.close();
 }
 
-main()
-  .catch((err) => {
-    console.error("Error in main function:", err);
-  })
-  .then(() => {
-    process.exit(1);
-  });
+async function promptForAnalysis(model?: string): Promise<boolean> {
+  const { analyze } = await inquirer.prompt([{
+    type: "confirm",
+    name: "analyze",
+    message: `Run analysis with ${model || 'default model'}?`,
+    default: true
+  }]);
+  return analyze;
+}
+
+function handleExecuteError(error: unknown) {
+  if (error instanceof CommandExecutionError) {
+    process.stderr.write(`\nCommand failed: ${error.message}\n`);
+    process.exit(error.exitCode);
+  }
+
+  process.stderr.write(`\nError: ${error instanceof Error ? error.message : 'Unknown error'}\n`);
+  process.exit(1);
+}

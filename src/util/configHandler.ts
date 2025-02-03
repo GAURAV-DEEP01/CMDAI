@@ -40,72 +40,78 @@ function loadConfig(): Config {
 }
 
 async function runSetup() {
-  const answers = await inquirer.prompt<{
-    providerType: "ollama" | "api";
-    ollamaModel: string;
-    customOllamaModel: string;
-    apiProvider: keyof typeof API_PROVIDERS;
-    apiModel: string;
-    apiKey: string;
-    ollamaBaseUrl: string;
-  }>([
-    {
-      type: "list",
-      name: "providerType",
-      message: "Choose your LLM provider:",
-      choices: [
-        { name: "Local Ollama", value: "ollama" },
-        { name: "Custom cloud API", value: "api" },
-      ],
-    },
-    {
-      type: "input",
-      name: "ollamaBaseUrl",
-      message: "Ollama base URL (default: http://localhost:11434):",
-      default: "http://localhost:11434",
-      when: (answers) => answers.providerType === "ollama",
-      validate: (input) => isValidUrl(input) || "Please enter a valid URL",
-    },
-    {
-      type: "list",
-      name: "ollamaModel",
-      message: "Select Ollama model:",
-      choices: async (answers) => {
-        try {
-          const response = await axios.get(`${answers.ollamaBaseUrl}/api/tags`);
-          if (!response.data.models) {
-            throw new Error("Invalid response from Ollama");
-          }
-          return response.data.models.map((m: any) => m.name);
-        } catch (error) {
-          console.log("⚠️  Could not connect to Ollama. Using default models");
-          return DEFAULT_OLLAMA_MODELS;
-        }
+  let answers;
+  try {
+    answers = await inquirer.prompt<{
+      providerType: "ollama" | "api";
+      ollamaModel: string;
+      customOllamaModel: string;
+      apiProvider: keyof typeof API_PROVIDERS;
+      apiModel: string;
+      apiKey: string;
+      ollamaBaseUrl: string;
+    }>([
+      {
+        type: "list",
+        name: "providerType",
+        message: "Choose your LLM provider:",
+        choices: [
+          { name: "Local Ollama", value: "ollama" },
+          { name: "Custom cloud API", value: "api" },
+        ],
       },
-      when: (answers) => answers.providerType === "ollama",
-    },
-    {
-      type: "list",
-      name: "apiProvider",
-      message: "Select API provider:",
-      choices: Object.keys(API_PROVIDERS),
-      when: (answers) => answers.providerType === "api",
-    },
-    {
-      type: "password",
-      name: "apiKey",
-      message: "Enter API key:",
-      when: (answers) => answers.providerType === "api",
-      validate: (input) => !!input.trim(),
-    },
-    {
-      type: "list",
-      name: "apiModel",
-      message: "Select model:",
-      choices: (answers) => API_PROVIDERS[answers.apiProvider!],
-      when: (answers) => answers.providerType === "api",
-    },
-  ]);
+      {
+        type: "input",
+        name: "ollamaBaseUrl",
+        message: "Ollama base URL (default: http://localhost:11434):",
+        default: "http://localhost:11434",
+        when: (answers) => answers.providerType === "ollama",
+        validate: (input) => isValidUrl(input) || "Please enter a valid URL",
+      },
+      {
+        type: "list",
+        name: "ollamaModel",
+        message: "Select Ollama model:",
+        choices: async (answers) => {
+          try {
+            const response = await axios.get(`${answers.ollamaBaseUrl}/api/tags`);
+            if (!response.data.models) {
+              throw new Error("Invalid response from Ollama");
+            }
+            return response.data.models.map((m: any) => m.name);
+          } catch (error) {
+            console.log("⚠️  Could not connect to Ollama. Using default models");
+            return DEFAULT_OLLAMA_MODELS;
+          }
+        },
+        when: (answers) => answers.providerType === "ollama",
+      },
+      {
+        type: "list",
+        name: "apiProvider",
+        message: "Select API provider:",
+        choices: Object.keys(API_PROVIDERS),
+        when: (answers) => answers.providerType === "api",
+      },
+      {
+        type: "password",
+        name: "apiKey",
+        message: "Enter API key:",
+        when: (answers) => answers.providerType === "api",
+        validate: (input) => !!input.trim(),
+      },
+      {
+        type: "list",
+        name: "apiModel",
+        message: "Select model:",
+        choices: (answers) => API_PROVIDERS[answers.apiProvider!],
+        when: (answers) => answers.providerType === "api",
+      },
+    ]);
+  } catch (error) {
+    process.stderr.write("Exited");
+    process.exit(1);
+  }
 
   const config: Config = {
     provider: answers.providerType,
@@ -119,9 +125,8 @@ async function runSetup() {
 
   if (answers.providerType === "api") {
     // Store API key in .env file
-    const envContent = `${answers.apiProvider.toUpperCase()}_API_KEY=${
-      answers.apiKey
-    }`;
+    const envContent = `${answers.apiProvider.toUpperCase()}_API_KEY=${answers.apiKey
+      }`;
     if (!fs.existsSync(CONFIG_DIR)) {
       fs.mkdirSync(CONFIG_DIR, { recursive: true });
     }

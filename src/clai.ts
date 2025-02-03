@@ -102,25 +102,30 @@ async function handleExecuteCommand(userArgs: CLIArgs) {
     if (output) process.stdout.write(`${output}\n`);
     if (error) process.stderr.write(`${error}\n`);
 
-    // Determine if analysis should proceed
-    const answer = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "analyze",
-        message: `Run analysis with ${userArgs.model}?`,
-        default: true,
-      },
-    ]);
+    try {
+      // Determine if analysis should proceed
+      const answer = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "analyze",
+          message: `Run analysis with ${userArgs.model}?`,
+          default: true,
+        },
+      ]);
 
-    if (answer.analyze) {
-      await analyzeCommandExecution({
-        command: commandStr,
-        output,
-        error,
-        model: userArgs.model as string,
-        customPrompt: userArgs.prompt,
-        verbose: userArgs.verbose,
-      });
+      if (answer.analyze) {
+        await analyzeCommandExecution({
+          command: commandStr,
+          output,
+          error,
+          model: userArgs.model as string,
+          customPrompt: userArgs.prompt,
+          verbose: userArgs.verbose,
+        });
+      }
+    } catch (error) {
+      process.stderr.write("Exited");
+      process.exit(1);
     }
   } catch (error) {
     if (error instanceof CommandExecutionError) {

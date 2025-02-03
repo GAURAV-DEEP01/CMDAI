@@ -8,17 +8,22 @@ export function runCommand(
   verbose: boolean = false
 ): Promise<{ output: string; error: string }> {
   return new Promise(async (resolve) => {
-    const answer = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "analyze",
-        message: `Do you want to run: ${command} ${args.join(" ")}? (y/n): `,
-        default: true,
-      },
-    ]);
-    clearStdLine();
-    if (!answer.analyze) {
-      process.exit(0);
+    try {
+      const answer = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "analyze",
+          message: `Do you want to run: ${command} ${args.join(" ")}? (y/n): `,
+          default: true,
+        },
+      ]);
+      clearStdLine();
+      if (!answer.analyze) {
+        process.exit(0);
+      }
+    } catch (error) {
+      process.stderr.write("Error\n");
+      process.exit(1);
     }
     if (verbose)
       process.stdout.write(`Running command: ${command} ${args.join(" ")}\n`);
@@ -39,17 +44,22 @@ export function runCommand(
     });
 
     timeout = setTimeout(async () => {
-      const answer = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "analyze",
-          message: `Process running for too long, Do you want to kill the process?`,
-          default: true,
-        },
-      ]);
-      clearStdLine();
-      if (answer.analyze) {
-        spawnedProcess.kill();
+      try {
+        const answer = await inquirer.prompt([
+          {
+            type: "confirm",
+            name: "analyze",
+            message: `Process running for too long, Do you want to kill the process?`,
+            default: true,
+          },
+        ]);
+        clearStdLine();
+        if (answer.analyze) {
+          spawnedProcess.kill();
+        }
+      } catch (error) {
+        process.stderr.write("Error\n");
+        process.exit(1);
       }
     }, 10000);
 
@@ -75,6 +85,7 @@ export function runCommand(
 }
 
 // Helper: Run a shell command and capture its output
+
 export function getLastCommand(): string {
   try {
     const shell = process.env.SHELL || "";
@@ -84,14 +95,16 @@ export function getLastCommand(): string {
       const historyFile = process.env.HISTFILE || "~/.zsh_history";
       historyCommand = `tail -n 2 ${historyFile} | head -n 1 | sed 's/^: [0-9]*:[0-9];//'`;
     } else if (shell.includes("bash")) {
-      historyCommand = `history | tail -n 2 | head -n 1`;
+      const historyFile = `${process.env.HOME}/.bash_history`;
+      historyCommand = `tail -n 1 ${historyFile}`;
     } else {
-      console.error("Unsupported shell. Please provide a command manually.");
+      process.stderr.write("Unsupported shell. Please provide a command manually.\n");
       return "";
     }
+
     return execSync(historyCommand, { shell: shell }).toString().trim();
   } catch (error) {
-    console.error("Failed to fetch the last command from history.");
+    process.stderr.write("Failed to fetch the last command from history.\n");
     return "";
   }
 }

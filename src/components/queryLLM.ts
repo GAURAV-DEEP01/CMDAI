@@ -1,7 +1,7 @@
 import ollama from "ollama";
 
 import clc from "cli-color";
-import { clearStdLine, loadingAnimation } from "../util/tools";
+import { loadingAnimation } from "../util/tools";
 import { CommandAnalysis } from "../types/commandAnalysis";
 
 const MAX_RETRIES = 3;
@@ -21,9 +21,10 @@ export default async function queryLLM(
   retryCount: number = 0
 ): Promise<CommandAnalysis> {
   try {
-    process.stdout.write(
-      `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\n`
-    );
+    if (retryCount !== 0)
+      process.stdout.write(
+        `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\n`
+      );
 
     process.stdout.write(`Thinking`);
     const response = await ollama.chat({
@@ -39,7 +40,7 @@ export default async function queryLLM(
       ],
       stream: true,
     });
-    clearStdLine();
+    process.stdout.write(clc.erase.line);
 
     let aiOutput = "";
     let interval: NodeJS.Timeout | null = null;
@@ -65,15 +66,14 @@ export default async function queryLLM(
       // Cleanup loading animation
       if (interval) {
         clearInterval(interval);
-        clearStdLine();
+        process.stdout.write(clc.erase.line);
       }
     }
-
     process.stdout.write("\n");
     return validateAndParseResponse(aiOutput);
   } catch (error) {
     if (retryCount < MAX_RETRIES - 1) {
-      console.log(
+      console.error(
         `Retrying: ${error instanceof Error ? error.message : error}`
       );
       return await queryLLM(model, input, verbose, retryCount + 1);

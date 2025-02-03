@@ -21,7 +21,7 @@ async function main() {
     await handlePrimaryCommand(userArgs, DEFAULT_MODEL);
 
   } catch (error) {
-    console.log(`Unexpected error: ${error instanceof Error ? error.message : error}`);
+    console.error(`Unexpected error: ${error instanceof Error ? error.message : error}`);
     process.exit(1);
   }
 }

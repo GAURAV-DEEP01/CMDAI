@@ -10,7 +10,6 @@ export function clearStdLine() {
 
 export function readConfig(): Config {
   const configPath = path.join(os.homedir(), ".clai", "config.json");
-
   try {
     const data = fs.readFileSync(configPath, "utf-8");
     const configJson: Config = JSON.parse(data);

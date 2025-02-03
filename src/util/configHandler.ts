@@ -79,7 +79,7 @@ export async function runSetup() {
             }
             return response.data.models.map((m: any) => m.name);
           } catch (error) {
-            console.log(
+            console.error(
               "⚠️  Could not connect to Ollama. Using default models"
             );
             return DEFAULT_OLLAMA_MODELS;
@@ -160,7 +160,7 @@ export async function runSetup() {
   }
 
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
-  console.log(`\n✅ Configuration saved to ${CONFIG_PATH}\n`);
+  process.stdout.write(`\n✅ Configuration saved to ${CONFIG_PATH}\n`);
 }
 
 function isValidUrl(url: string) {

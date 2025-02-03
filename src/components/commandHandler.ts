@@ -6,7 +6,7 @@ import { CommandExecutionError } from "../types/errors";
 import { CLIArgs } from "../types/cliArgs";
 import { ConfigSubCommand } from "../util/constants";
 import { runSetup } from "../util/configHandler";
-import { readConfig } from "../util/tools";
+import { clearStdLine, readConfig } from "../util/tools";
 
 export async function handleExecuteCommand(userArgs: CLIArgs) {
   try {
@@ -29,9 +29,9 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
       commandArgs,
       userArgs.verbose
     );
-    process.stdout.write(clc.green.bold.underline(`Result:`));
-    if (output) process.stdout.write(`${output}\n`);
-    if (error) process.stderr.write(`${error}\n`);
+    process.stdout.write(clc.green.bold.underline(`Result:\n`));
+    if (output) process.stdout.write(`${output}`);
+    if (error) process.stderr.write(`${error}`);
 
     try {
       // Determine if analysis should proceed
@@ -43,6 +43,7 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
           default: true,
         },
       ]);
+      clearStdLine();
 
       if (answer.analyze) {
         await analyzeCommandExecution({

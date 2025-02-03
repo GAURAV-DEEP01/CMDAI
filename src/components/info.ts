@@ -2,14 +2,14 @@ import * as fs from "fs";
 import * as path from "path";
 import clc from "cli-color";
 
-// v2 additional commands: 
+// v2 additional commands:
 // ${clc.blue("clai session start")}
 // ${clc.blue("clai check")}              # Works only in session mode.
 // ${clc.blue("clai session end")}
 // ${clc.blue("clai session status")}
 
 function showHelp(DEFAULT_MODEL: string) {
-  console.log(`
+  process.stdout.write(`
 ${clc.bold("Usage:")} ${clc.cyan("clai [command] [options]")}
 
 ${clc.bold("Commands:")}
@@ -37,7 +37,7 @@ ${clc.bold("Options:")}
 ${clc.bold("Examples:")}
   ${clc.blue("clai")}                    # Rerun last command.
   ${clc.blue('clai --model="deepseek-r1:7b" --verbose')}
-  ${clc.blue("clai --prompt=\"echo 'Hello, world!'\"")}
+  ${clc.blue("clai --prompt=\"echo 'Hello, world!'\"")}\n
 `);
 }
 

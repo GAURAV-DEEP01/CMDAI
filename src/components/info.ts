@@ -9,7 +9,7 @@ import clc from "cli-color";
 // ${clc.blue("clai session status")}
 
 //todo fix
-function showHelp(DEFAULT_MODEL: string) {
+function showHelp() {
   process.stdout.write(`
 ${clc.bold("Usage:")} ${clc.cyan("clai [command] [options]")}
 
@@ -27,9 +27,7 @@ ${clc.bold("Commands:")}
   )}             Analyze last command (session mode only).
 
 ${clc.bold("Options:")}
-  ${clc.yellow("--model=<name>")}       Specify AI model (default: ${clc.cyan(
-    DEFAULT_MODEL
-  )}).
+  ${clc.yellow("--model=<name>")}       Specify AI model.
   ${clc.yellow("--prompt=<text>")}      Provide a custom AI prompt.
   ${clc.yellow("--verbose")}            Enable detailed output.
   ${clc.yellow("--help")}               Show this help message.
@@ -42,12 +40,12 @@ ${clc.bold("Examples:")}
 `);
 }
 
-export function showInfo(userArgs: any, DEFAULT_MODEL: string) {
+export function showInfo(userArgs: any) {
   if (userArgs.help) {
-    showHelp(DEFAULT_MODEL);
+    showHelp();
     return true;
   }
-  
+
   if (userArgs.version) {
     showVersion();
     return true;

@@ -29,6 +29,7 @@ const API_PROVIDERS = {
 
 async function initializeConfig() {
   if (!fs.existsSync(CONFIG_PATH)) {
+    process.stdout.write("No configuration found. Running setup...\n");
     await runSetup();
   }
   return readConfig();

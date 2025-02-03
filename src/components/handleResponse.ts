@@ -29,13 +29,8 @@ export async function handleResponse(response: {
   );
 
   try {
-    const [mainCommand, ...commandArgs] =
-      response.corrected_command.split(" ");
-    const { output, error } = await runCommand(
-      mainCommand,
-      commandArgs,
-      true
-    );
+    const [mainCommand, ...commandArgs] = response.corrected_command.split(" ");
+    const { output, error } = await runCommand(mainCommand, commandArgs, true);
     if (error) {
       console.error("\n\x1b[1;31mError:\x1b[0m", error);
     } else {

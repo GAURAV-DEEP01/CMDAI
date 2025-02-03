@@ -310,7 +310,8 @@ function validateCommandCombinations(args: Partial<CLIArgs>): void {
     );
     if (hasOtherFlags) {
       throw new ArgumentError(
-        `${args.help ? "Help" : "Version"
+        `${
+          args.help ? "Help" : "Version"
         } flag cannot be combined with other flags`,
         "INVALID_FLAG_COMBINATION"
       );

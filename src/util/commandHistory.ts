@@ -1,6 +1,6 @@
 import { execSync, spawn } from "child_process";
 import inquirer from "inquirer";
-import { clearLine } from "../util/tools";
+import { clearStdLine } from "../util/tools";
 
 // Helper: Fetch the last command from shell history
 export function getSessionCommandLog(): string {
@@ -21,7 +21,7 @@ export function runCommand(
         default: true,
       },
     ]);
-    clearLine();
+    clearStdLine();
     if (!answer.analyze) {
       process.exit(0);
     }
@@ -52,7 +52,7 @@ export function runCommand(
           default: true,
         },
       ]);
-      clearLine();
+      clearStdLine();
       if (answer.analyze) {
         spawnedProcess.kill();
       }

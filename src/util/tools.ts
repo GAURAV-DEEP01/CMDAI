@@ -13,6 +13,6 @@ export const loadingAnimation = [
   "⠏",
 ];
 
-export function clearLine() {
+export function clearStdLine() {
   process.stdout.write(clc.erase.line);
 }

@@ -18,7 +18,7 @@ async function main() {
     const config = await initializeConfig();
     const DEFAULT_MODEL = config.model;
 
-    await checkLLM();
+    await checkLLM(config);
 
     await handlePrimaryCommand(userArgs, DEFAULT_MODEL);
 

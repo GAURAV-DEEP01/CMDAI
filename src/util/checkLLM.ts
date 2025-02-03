@@ -1,5 +1,5 @@
-import { readConfig } from "./tools";
 import { initializeConfig } from "./configHandler";
+import { Config } from "../types/config";
 
 // not fixed
 async function pingEndpoint(urlString: string): Promise<boolean> {
@@ -14,15 +14,14 @@ async function pingEndpoint(urlString: string): Promise<boolean> {
   }
 }
 
-export async function checkLLM() {
-  let config = readConfig();
+export async function checkLLM(config: Config) {
   let baseUrl = config.baseUrl;
 
   // If baseUrl is not configured, initialize it
   if (!baseUrl) {
     process.stderr.write("No baseUrl configured\n");
     config = await initializeConfig();
-    return await checkLLM();
+    return await checkLLM(config);
   }
 
   // Default URL for Ollama

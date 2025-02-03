@@ -4,16 +4,12 @@ import { runCommand } from "../util/commandHistory";
 import { clearLine } from "../util/tools";
 import inquirer from "inquirer";
 
-export async function handleResponse(
-  response: {
-    description: string;
-    possible_fixes: string[];
-    corrected_command: string;
-    explanation?: string;
-  },
-  // todo type
-  rl?: any
-) {
+export async function handleResponse(response: {
+  description: string;
+  possible_fixes: string[];
+  corrected_command: string;
+  explanation?: string;
+}) {
   process.stdout.write(`${clc.bold.underline("Validation Results\n")}`);
   process.stdout.write(
     `\x1b[1;34mDescription:\x1b[0m ${response.description}\n`

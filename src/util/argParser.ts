@@ -1,4 +1,9 @@
-import { Primary, Flag, SessionSubCommand, ConfigSubCommand } from "../util/constants";
+import {
+  Primary,
+  Flag,
+  SessionSubCommand,
+  ConfigSubCommand,
+} from "../util/constants";
 import { CLIArgs } from "../types/cliArgs";
 import { ArgumentError } from "../types/errors";
 
@@ -20,23 +25,22 @@ import { ArgumentError } from "../types/errors";
 // clai --prompt="<prompt>" --verbose
 // clai --command="<command>" --prompt="<prompt>" --verbose
 
-
 // Command structure definition for easy extension
 const commandStructure: any = {
   [Primary.SESSION]: {
     subCommands: Object.values(SessionSubCommand),
-    flags: [Flag.VERBOSE]
+    flags: [Flag.VERBOSE],
   },
   [Primary.CONFIG]: {
     subCommands: Object.values(ConfigSubCommand),
-    flags: [Flag.KEY, Flag.VALUE, Flag.VERBOSE]
+    flags: [Flag.KEY, Flag.VALUE, Flag.VERBOSE],
   },
   [Primary.CHECK]: {
-    flags: [Flag.PROMPT, Flag.VERBOSE]
+    flags: [Flag.PROMPT, Flag.VERBOSE],
   },
   [Primary.EXECUTE]: {
-    flags: [Flag.COMMAND, Flag.PROMPT, Flag.MODEL, Flag.VERBOSE]
-  }
+    flags: [Flag.COMMAND, Flag.PROMPT, Flag.MODEL, Flag.VERBOSE],
+  },
 };
 
 export function parseCLIArgs(): CLIArgs {
@@ -67,21 +71,25 @@ function parseSubCommand<T>(
   primary: Primary,
   subCommandEnum: Record<string, T>
 ): CLIArgs {
-  const subCommandArg = args.find(arg => Object.values(subCommandEnum).includes(arg as T));
+  const subCommandArg = args.find((arg) =>
+    Object.values(subCommandEnum).includes(arg as T)
+  );
   if (!subCommandArg) {
     throw new ArgumentError(
-      `Missing subcommand for ${primary}, expected: ${Object.values(subCommandEnum).join(", ")}`,
+      `Missing subcommand for ${primary}, expected: ${Object.values(
+        subCommandEnum
+      ).join(", ")}`,
       "MISSING_SUBCOMMAND"
     );
   }
 
   const flags = parseFlags(args, primary);
-  validateCommandStructure(primary, flags, subCommandArg as T);
+  validateCommandStructure(primary);
 
   return {
     primary,
     subCommand: subCommandArg as T,
-    ...flags
+    ...flags,
   } as CLIArgs;
 }
 
@@ -96,7 +104,10 @@ function parseFlags(args: string[], primary: Primary): Partial<CLIArgs> {
     const [flag, value] = parseFlagValue(arg);
 
     if (!allowedFlags.includes(flag as Flag)) {
-      throw new ArgumentError(`Invalid flag for ${primary}: ${flag}`, "INVALID_FLAG");
+      throw new ArgumentError(
+        `Invalid flag for ${primary}: ${flag}`,
+        "INVALID_FLAG"
+      );
     }
 
     switch (flag) {
@@ -105,7 +116,11 @@ function parseFlags(args: string[], primary: Primary): Partial<CLIArgs> {
       case Flag.PROMPT:
       case Flag.COMMAND:
       case Flag.MODEL:
-        if (!value) throw new ArgumentError(`Flag ${flag} requires a value`, "MISSING_VALUE");
+        if (!value)
+          throw new ArgumentError(
+            `Flag ${flag} requires a value`,
+            "MISSING_VALUE"
+          );
         result[flag.substring(2).toLowerCase() as keyof CLIArgs] = value as any;
         break;
       case Flag.VERBOSE:
@@ -117,7 +132,7 @@ function parseFlags(args: string[], primary: Primary): Partial<CLIArgs> {
   return result;
 }
 
-function validateCommandStructure(primary: Primary, flags: Partial<CLIArgs>, subCommand?: any) {
+function validateCommandStructure(primary: Primary) {
   const structure = commandStructure[primary];
   if (!structure) return;
 }
@@ -136,10 +151,10 @@ function findPrimaryCommand(args: string[]): Primary {
     session: Primary.SESSION,
     check: Primary.CHECK,
     config: Primary.CONFIG,
-    prompt: Primary.EXECUTE
+    prompt: Primary.EXECUTE,
   };
 
-  const cmd = args.find(arg => commandMap[arg]);
+  const cmd = args.find((arg) => commandMap[arg]);
   return cmd ? commandMap[cmd] : Primary.EXECUTE;
 }
 
@@ -211,14 +226,14 @@ function handleSpecialCases(primary: Primary, args: string[]): CLIArgs | null {
         if (!value) {
           throw new ArgumentError(
             "Prompt flag requires a value",
-            "INVALID_PROMPT",
+            "INVALID_PROMPT"
           );
         }
         result.prompt = value;
       } else if (arg !== "check" && arg !== "prompt") {
         throw new ArgumentError(
           `Check command only accepts --verbose and --prompt flags, got: ${arg}`,
-          "INVALID_CHECK_FLAGS",
+          "INVALID_CHECK_FLAGS"
         );
       }
       i++;
@@ -230,6 +245,7 @@ function handleSpecialCases(primary: Primary, args: string[]): CLIArgs | null {
   return null;
 }
 
+//todo check in future if needed or not
 function parseSessionCommand(args: string[]): CLIArgs {
   // Remove any leading 'prompt' if present
   const relevantArgs = args.filter((arg) => arg !== "prompt");
@@ -237,7 +253,7 @@ function parseSessionCommand(args: string[]): CLIArgs {
   if (relevantArgs.length < 2) {
     throw new ArgumentError(
       "Session command requires a subcommand (start/end/status)",
-      "INVALID_SESSION",
+      "INVALID_SESSION"
     );
   }
 
@@ -245,7 +261,7 @@ function parseSessionCommand(args: string[]): CLIArgs {
   if (!subCommand) {
     throw new ArgumentError(
       `Invalid session subcommand. Expected 'start', 'end', or 'status', got '${relevantArgs[1]}'`,
-      "INVALID_SUBCOMMAND",
+      "INVALID_SUBCOMMAND"
     );
   }
 
@@ -262,7 +278,7 @@ function validateNoExtraArgs(args: string[], command: Primary): void {
   if (nonFlagArgs.length > 1) {
     throw new ArgumentError(
       `${command} command cannot have additional arguments`,
-      "UNEXPECTED_ARGS",
+      "UNEXPECTED_ARGS"
     );
   }
 }
@@ -286,7 +302,7 @@ function parseRegularCommand(args: string[], primary: Primary): CLIArgs {
         if (!value)
           throw new ArgumentError(
             "Model flag requires a value",
-            "INVALID_MODEL",
+            "INVALID_MODEL"
           );
         result.model = value;
         break;
@@ -294,7 +310,7 @@ function parseRegularCommand(args: string[], primary: Primary): CLIArgs {
         if (!value)
           throw new ArgumentError(
             "Prompt flag requires a value",
-            "INVALID_PROMPT",
+            "INVALID_PROMPT"
           );
         result.prompt = value;
         break;
@@ -302,7 +318,7 @@ function parseRegularCommand(args: string[], primary: Primary): CLIArgs {
         if (!value)
           throw new ArgumentError(
             "Command flag requires a value",
-            "INVALID_COMMAND",
+            "INVALID_COMMAND"
           );
         result.commandStr = value;
         break;
@@ -328,12 +344,14 @@ function parseRegularCommand(args: string[], primary: Primary): CLIArgs {
 function validateCommandCombinations(args: Partial<CLIArgs>): void {
   if (args.help || args.version) {
     const hasOtherFlags = Object.keys(args).some(
-      (key) => key !== "help" && key !== "version" && key !== "primary",
+      (key) => key !== "help" && key !== "version" && key !== "primary"
     );
     if (hasOtherFlags) {
       throw new ArgumentError(
-        `${args.help ? "Help" : "Version"} flag cannot be combined with other flags`,
-        "INVALID_FLAG_COMBINATION",
+        `${
+          args.help ? "Help" : "Version"
+        } flag cannot be combined with other flags`,
+        "INVALID_FLAG_COMBINATION"
       );
     }
   }

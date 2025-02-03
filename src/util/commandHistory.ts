@@ -25,8 +25,8 @@ export function runCommand(
     if (!answer.analyze) {
       process.exit(0);
     }
-
-    process.stdout.write(`Running command: ${command} ${args.join(" ")}\n`);
+    if (verbose)
+      process.stdout.write(`Running command: ${command} ${args.join(" ")}\n`);
 
     const spawnedProcess = spawn(command, args, { shell: true });
     let output = "";

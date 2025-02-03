@@ -85,18 +85,19 @@ export function runCommand(
 }
 
 // Helper: Run a shell command and capture its output
-
-export function getLastCommand(): string {
+export function getLastCommand(offset: number = 1): string {
   try {
     const shell = process.env.SHELL || "";
     let historyCommand: string;
 
     if (shell.includes("zsh")) {
       const historyFile = process.env.HISTFILE || "~/.zsh_history";
-      historyCommand = `tail -n 2 ${historyFile} | head -n 1 | sed 's/^: [0-9]*:[0-9];//'`;
+      historyCommand = `tail -n ${
+        offset + 1
+      } ${historyFile} | head -n 1 | sed 's/^: [0-9]*:[0-9];//'`;
     } else if (shell.includes("bash")) {
       const historyFile = `${process.env.HOME}/.bash_history`;
-      historyCommand = `tail -n 1 ${historyFile}`;
+      historyCommand = `tail -n ${offset + 1} ${historyFile} | head -n 1`;
     } else {
       process.stderr.write(
         "Unsupported shell. Please provide a command manually.\n"
@@ -104,7 +105,13 @@ export function getLastCommand(): string {
       return "";
     }
 
-    return execSync(historyCommand, { shell: shell }).toString().trim();
+    const command = execSync(historyCommand, { shell: shell })
+      .toString()
+      .trim();
+    if (command.includes("clai")) {
+      return getLastCommand(offset + 1);
+    }
+    return command;
   } catch (error) {
     process.stderr.write("Failed to fetch the last command from history.\n");
     return "";

@@ -12,7 +12,7 @@ export function readConfig(): Config {
   const configPath = path.join(os.homedir(), ".clai", "config.json");
   try {
     const data = fs.readFileSync(configPath, "utf-8");
-    const configJson: Config = JSON.parse(data);
+    return JSON.parse(data);
 
     // to do set this up duing installation or first run, later
     // const shell = process.env.SHELL || "";
@@ -29,8 +29,6 @@ export function readConfig(): Config {
     //     fs.appendFileSync(bashrcPath, bashrcContent);
     //   }
     // }
-
-    return configJson;
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error reading config file:", error.message);

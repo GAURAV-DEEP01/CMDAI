@@ -14,10 +14,10 @@ async function main() {
     await checkLLM();
 
     let userArgs: CLIArgs = parseCLIArgs();
-
+    
     if (showInfo(userArgs, DEFAULT_MODEL))
       process.exit(0);
-
+    
     await handlePrimaryCommand(userArgs, DEFAULT_MODEL);
 
   } catch (error) {

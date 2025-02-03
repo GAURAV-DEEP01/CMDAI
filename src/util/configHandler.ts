@@ -149,7 +149,7 @@ export async function runSetup() {
         : answers.apiBaseUrl,
     session: false,
   };
-
+  // v2
   if (answers.providerType === "api") {
     // Store API key in .env file
     const envContent = `API_KEY=${answers.apiKey}`;

@@ -8,6 +8,7 @@ import clc from "cli-color";
 // ${clc.blue("clai session end")}
 // ${clc.blue("clai session status")}
 
+//todo fix
 function showHelp(DEFAULT_MODEL: string) {
   process.stdout.write(`
 ${clc.bold("Usage:")} ${clc.cyan("clai [command] [options]")}
@@ -46,7 +47,7 @@ export function showInfo(userArgs: any, DEFAULT_MODEL: string) {
     showHelp(DEFAULT_MODEL);
     return true;
   }
-
+  
   if (userArgs.version) {
     showVersion();
     return true;

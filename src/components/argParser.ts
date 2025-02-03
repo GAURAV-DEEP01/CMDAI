@@ -63,14 +63,11 @@ export function parseCLIArgs(): CLIArgs {
         return parseSubCommand(args, Primary.CONFIG, ConfigSubCommand);
     }
     return parseRegularCommand(args, primary);
-
   } catch (error) {
     if (error instanceof ArgumentError) {
-      const errorMessage = `Error (${error.code}): ${error.message}`;
-      process.stderr.write(errorMessage + "\n");
+      process.stderr.write(`Error (${error.code}): ${error.message}\n`);
     } else {
-      process.stderr.write("Unexpected error during argument parsing:");
-      console.error(error);
+      console.error("Unexpected error during argument parsing:", error);
     }
     process.exit(1);
   }
@@ -221,6 +218,7 @@ function handleSpecialCases(primary: Primary, args: string[]): CLIArgs | null {
     }
   }
 
+  // v2
   // Handle check command
   if (primary === Primary.CHECK) {
     const result: Partial<CLIArgs> = { primary: Primary.CHECK };
@@ -321,7 +319,8 @@ function validateCommandCombinations(args: Partial<CLIArgs>): void {
     );
     if (hasOtherFlags) {
       throw new ArgumentError(
-        `${args.help ? "Help" : "Version"
+        `${
+          args.help ? "Help" : "Version"
         } flag cannot be combined with other flags`,
         "INVALID_FLAG_COMBINATION"
       );

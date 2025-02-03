@@ -5,7 +5,7 @@ import { initializeConfig } from "./configHandler";
 async function pingEndpoint(urlString: string): Promise<boolean> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 7000); // 7-second timeout
     const response = await fetch(urlString, { signal: controller.signal });
     clearTimeout(timeoutId); // Clear the timeout if the request succeeds
     return response.ok; // Returns true if status is 2xx
@@ -22,18 +22,12 @@ export async function checkLLM() {
   if (!baseUrl) {
     process.stderr.write("No baseUrl configured\n");
     config = await initializeConfig();
-    baseUrl = config.baseUrl;
+    return await checkLLM();
   }
 
   // Default URL for Ollama
-  if (config.provider === "ollama" && !baseUrl) {
+  if (config.provider === "ollama" || !baseUrl) {
     baseUrl = "http://localhost:11434";
-  }
-
-  // Ensure baseUrl is defined
-  if (!baseUrl) {
-    process.stderr.write("Error: No baseUrl configured\n");
-    process.exit(0);
   }
 
   // Ping the endpoint

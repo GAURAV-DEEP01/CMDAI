@@ -3,4 +3,5 @@ export type Config = {
   model: string;
   baseUrl?: string;
   session: boolean;
+  forceBashHistoyWrite?: boolean;
 };

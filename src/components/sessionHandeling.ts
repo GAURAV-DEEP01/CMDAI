@@ -1,20 +1,22 @@
 import { CLIArgs } from "../types/cliArgs";
 import { SessionSubCommand } from "../util/constants";
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { readConfig } from "../util/tools";
 
 // Constants for consistent messaging
-const CONFIG_DIR = path.join(__dirname, "../../config");
+const CONFIG_DIR = path.join(os.homedir(), "/.clai");
 const CONFIG_PATH = path.join(CONFIG_DIR, "config.json");
 const STATUS_ICONS = { SUCCESS: "✓", ERROR: "✗" };
 
+// v2 - Add a new function to handle session commands 
 export function handleSessionCommand(userArgs: CLIArgs) {
   try {
     // Ensure config directory exists
     if (!fs.existsSync(CONFIG_DIR)) {
       fs.mkdirSync(CONFIG_DIR, { recursive: true });
-      console.log(`${STATUS_ICONS.SUCCESS} Created config directory`);
+      process.stderr.write(`${STATUS_ICONS.SUCCESS} Created config directory`);
     }
 
     let config = readConfig();
@@ -34,8 +36,7 @@ export function handleSessionCommand(userArgs: CLIArgs) {
     }
   } catch (error) {
     console.error(
-      `${STATUS_ICONS.ERROR} ${
-        error instanceof Error ? error.message : "Unknown error"
+      `${STATUS_ICONS.ERROR} ${error instanceof Error ? error.message : "Unknown error"
       }`
     );
     process.exit(1);
@@ -56,7 +57,10 @@ function handleSessionStart(config: any) {
     console.log(`${STATUS_ICONS.ERROR} Session is already active`);
     return;
   }
-
+  // start storing command and output in a session log file
+  // create a new session file
+  const sessionFile = path.join(CONFIG_DIR, "session.log");
+  fs.writeFileSync(sessionFile, "");
   config.session = true;
   writeConfigFile(config);
   console.log(`${STATUS_ICONS.SUCCESS} New session started`);
@@ -67,7 +71,6 @@ function handleSessionEnd(config: any) {
     console.log(`${STATUS_ICONS.ERROR} No active session to end`);
     return;
   }
-
   config.session = false;
   writeConfigFile(config);
   console.log(`${STATUS_ICONS.SUCCESS} Session ended successfully`);

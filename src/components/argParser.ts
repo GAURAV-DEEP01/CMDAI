@@ -44,25 +44,36 @@ const commandStructure: any = {
 };
 
 export function parseCLIArgs(): CLIArgs {
-  const args = normalizeArgs(process.argv.slice(2));
+  try {
+    const args = normalizeArgs(process.argv.slice(2));
 
-  if (args.length === 0) {
-    return { primary: Primary.EXECUTE };
+    if (args.length === 0) {
+      return { primary: Primary.EXECUTE };
+    }
+
+    const primary = findPrimaryCommand(args);
+    const specialResult = handleSpecialCases(primary, args);
+    if (specialResult) return specialResult;
+
+    // Handle commands with subcommands
+    switch (primary) {
+      case Primary.SESSION:
+        return parseSubCommand(args, Primary.SESSION, SessionSubCommand);
+      case Primary.CONFIG:
+        return parseSubCommand(args, Primary.CONFIG, ConfigSubCommand);
+    }
+    return parseRegularCommand(args, primary);
+
+  } catch (error) {
+    if (error instanceof ArgumentError) {
+      const errorMessage = `Error (${error.code}): ${error.message}`;
+      process.stderr.write(errorMessage + "\n");
+    } else {
+      process.stderr.write("Unexpected error during argument parsing:");
+      console.error(error);
+    }
+    process.exit(1);
   }
-
-  const primary = findPrimaryCommand(args);
-  const specialResult = handleSpecialCases(primary, args);
-  if (specialResult) return specialResult;
-
-  // Handle commands with subcommands
-  switch (primary) {
-    case Primary.SESSION:
-      return parseSubCommand(args, Primary.SESSION, SessionSubCommand);
-    case Primary.CONFIG:
-      return parseSubCommand(args, Primary.CONFIG, ConfigSubCommand);
-  }
-
-  return parseRegularCommand(args, primary);
 }
 
 // Generic subcommand parser
@@ -310,8 +321,7 @@ function validateCommandCombinations(args: Partial<CLIArgs>): void {
     );
     if (hasOtherFlags) {
       throw new ArgumentError(
-        `${
-          args.help ? "Help" : "Version"
+        `${args.help ? "Help" : "Version"
         } flag cannot be combined with other flags`,
         "INVALID_FLAG_COMBINATION"
       );

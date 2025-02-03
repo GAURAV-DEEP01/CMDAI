@@ -60,7 +60,7 @@ build_project() {
     echo "Building project..."
     cd "$REPO_DIR"
     npm install
-    npm run package
+    sudo npm run package
 }
 
 # Main execution flow

@@ -245,44 +245,6 @@ function handleSpecialCases(primary: Primary, args: string[]): CLIArgs | null {
   return null;
 }
 
-//todo check in future if needed or not
-function parseSessionCommand(args: string[]): CLIArgs {
-  // Remove any leading 'prompt' if present
-  const relevantArgs = args.filter((arg) => arg !== "prompt");
-
-  if (relevantArgs.length < 2) {
-    throw new ArgumentError(
-      "Session command requires a subcommand (start/end/status)",
-      "INVALID_SESSION"
-    );
-  }
-
-  const subCommand = mapSessionSubCommand(relevantArgs[1]);
-  if (!subCommand) {
-    throw new ArgumentError(
-      `Invalid session subcommand. Expected 'start', 'end', or 'status', got '${relevantArgs[1]}'`,
-      "INVALID_SUBCOMMAND"
-    );
-  }
-
-  validateNoExtraArgs(relevantArgs.slice(1), Primary.SESSION);
-
-  return {
-    primary: Primary.SESSION,
-    subCommand,
-  } as CLIArgs;
-}
-
-function validateNoExtraArgs(args: string[], command: Primary): void {
-  const nonFlagArgs = args.filter((arg) => !arg.startsWith("--"));
-  if (nonFlagArgs.length > 1) {
-    throw new ArgumentError(
-      `${command} command cannot have additional arguments`,
-      "UNEXPECTED_ARGS"
-    );
-  }
-}
-
 function parseRegularCommand(args: string[], primary: Primary): CLIArgs {
   const result: Partial<CLIArgs> = {
     primary: primary || Primary.EXECUTE,
@@ -348,21 +310,10 @@ function validateCommandCombinations(args: Partial<CLIArgs>): void {
     );
     if (hasOtherFlags) {
       throw new ArgumentError(
-        `${
-          args.help ? "Help" : "Version"
+        `${args.help ? "Help" : "Version"
         } flag cannot be combined with other flags`,
         "INVALID_FLAG_COMBINATION"
       );
     }
   }
-}
-
-function mapSessionSubCommand(cmd: string): SessionSubCommand | undefined {
-  const subCommandMap: Record<string, SessionSubCommand> = {
-    start: SessionSubCommand.START,
-    end: SessionSubCommand.END,
-    status: SessionSubCommand.STATUS,
-  };
-
-  return subCommandMap[cmd];
 }

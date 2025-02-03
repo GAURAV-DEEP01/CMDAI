@@ -1,8 +1,6 @@
 import clc from "cli-color";
 
 import { runCommand } from "../util/commandHistory";
-import { clearLine } from "../util/tools";
-import inquirer from "inquirer";
 
 export async function handleResponse(response: {
   description: string;
@@ -31,31 +29,17 @@ export async function handleResponse(response: {
   );
 
   try {
-    const answer = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "analyze",
-        message: `Run: ${response.corrected_command}? (y/n): `,
-        default: true,
-      },
-    ]);
-    clearLine();
-
-    if (answer.analyze) {
-      const [mainCommand, ...commandArgs] =
-        response.corrected_command.split(" ");
-      const { output, error } = await runCommand(
-        mainCommand,
-        commandArgs,
-        true
-      );
-      if (error) {
-        console.error("\n\x1b[1;31mError:\x1b[0m", error);
-      } else {
-        console.log("\n\x1b[1;32mOutput:\x1b[0m", output);
-      }
+    const [mainCommand, ...commandArgs] =
+      response.corrected_command.split(" ");
+    const { output, error } = await runCommand(
+      mainCommand,
+      commandArgs,
+      true
+    );
+    if (error) {
+      console.error("\n\x1b[1;31mError:\x1b[0m", error);
     } else {
-      console.log("\n\x1b[1;33mCommand not executed.\x1b[0m");
+      console.log("\n\x1b[1;32mOutput:\x1b[0m", output);
     }
   } catch (e) {
     console.log(e);

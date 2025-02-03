@@ -17,7 +17,7 @@ export function runCommand(
       {
         type: "confirm",
         name: "analyze",
-        message: `Do you want to run:${command} ${args.join(" ")}? (y/n): `,
+        message: `Do you want to run: ${command} ${args.join(" ")}? (y/n): `,
         default: true,
       },
     ]);

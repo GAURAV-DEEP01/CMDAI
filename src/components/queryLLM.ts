@@ -2,13 +2,7 @@ import ollama from "ollama";
 
 import clc from "cli-color";
 import { clearLine, loadingAnimation } from "../util/tools";
-
-export interface CommandAnalysis {
-  description: string;
-  possible_fixes: string[];
-  corrected_command: string;
-  explanation?: string;
-}
+import { CommandAnalysis } from "../types/commandAnalysis";
 
 const MAX_RETRIES = 3;
 
@@ -85,7 +79,7 @@ export default async function queryLLM(
       console.log(
         `Retrying: ${error instanceof Error ? error.message : error}`
       );
-      return queryLLM(model, input, isDefaultPrompt, verbose, retryCount + 1);
+      return await queryLLM(model, input, isDefaultPrompt, verbose, retryCount + 1);
     }
     process.stderr.write(
       clc.red(
@@ -161,8 +155,7 @@ const validateAndParseResponse = (response: string): CommandAnalysis => {
     };
   } catch (error) {
     throw new Error(
-      `Response validation failed: ${
-        error instanceof Error ? error.message : error
+      `Response validation failed: ${error instanceof Error ? error.message : error
       }`
     );
   }

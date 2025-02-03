@@ -10,6 +10,8 @@ import { parseCLIArgs } from "./components/argParser";
 import { CLIArgs } from "./types/cliArgs";
 import { initializeConfig } from "./util/configHandler";
 import inquirer from "inquirer";
+import clc from "cli-color";
+// import { checkLLM } from "./util/checkLLM";
 
 // Handle uncaught promise rejections
 process.on("unhandledRejection", (reason, promise) => {
@@ -25,9 +27,10 @@ async function main() {
 
   try {
     const config = await initializeConfig();
-    // todo fix default model
-    const DEFAULT_MODEL = config.model || "deepseek-r1:7b";
+    const DEFAULT_MODEL = config.model;
     //todo first check if llm running
+    // await checkLLM();
+
     let userArgs: CLIArgs;
     try {
       userArgs = parseCLIArgs();
@@ -98,7 +101,7 @@ async function handleExecuteCommand(userArgs: CLIArgs) {
       commandArgs,
       userArgs.verbose
     );
-    process.stdout.write(`\nResult:\n`);
+    process.stdout.write(clc.green.bold.underline(`Result:`));
     if (output) process.stdout.write(`${output}\n`);
     if (error) process.stderr.write(`${error}\n`);
 

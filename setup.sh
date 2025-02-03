@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Configuration
@@ -17,7 +17,7 @@ check_dependency() {
 check_dependency git
 check_dependency npm
 check_dependency ollama
- 
+
 # Clone repository
 clone_repo() {
     if [[ -d "$REPO_DIR" ]]; then
@@ -29,17 +29,22 @@ clone_repo() {
     fi
 }
 
-# Configure bash history settings
-configure_bashrc() {
-    local bashrc_content="# CLAI Configuration
+# Configure shell history settings
+configure_shellrc() {
+    local shell_rc
+    local config_content
+
+    if [[ "$SHELL" == *bash ]]; then
+        shell_rc="$HOME/.bashrc"
+        config_content="# CLAI Configuration
 PROMPT_COMMAND=\"history -a\"
 shopt -s histappend"
-
-    if ! grep -qF "# CLAI Configuration" ~/.bashrc; then
-        echo "Updating ~/.bashrc configuration..."
-        echo "$bashrc_content" >> ~/.bashrc
-        source ~/.bashrc
+        if ! grep -qF "# CLAI Configuration" "$shell_rc"; then
+            echo "Updating $shell_rc configuration..."
+            echo "$config_content" >> "$shell_rc"
+        fi
     fi
+    echo "$shell_rc"
 }
 
 # Create .clai directory
@@ -61,12 +66,13 @@ build_project() {
 # Main execution flow
 main() {
     clone_repo
-    configure_bashrc
+    local shell_rc
+    shell_rc=$(configure_shellrc) || exit 1
     create_clai_dir
     build_project
     
     echo -e "\nCLAI setup completed successfully!"
-    echo "You may need to restart your shell or run: source ~/.bashrc"
+    echo "You may need to restart your shell or run: source $shell_rc"
 }
 
 main "$@"

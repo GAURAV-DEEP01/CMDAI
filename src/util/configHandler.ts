@@ -34,9 +34,7 @@ async function initializeConfig() {
   return readConfig();
 }
 
-//todo setconfig & getconfig
-
-async function runSetup() {
+export async function runSetup() {
   let answers;
   try {
     answers = await inquirer.prompt<{
@@ -55,7 +53,8 @@ async function runSetup() {
         message: "Choose your LLM provider:",
         choices: [
           { name: "Local Ollama", value: "ollama" },
-          { name: "Custom cloud API", value: "api" },
+          // v2
+          // { name: "Custom cloud API", value: "api" },
         ],
       },
       {
@@ -88,6 +87,7 @@ async function runSetup() {
         },
         when: (answers) => answers.providerType === "ollama",
       },
+      // v2
       {
         type: "list",
         name: "apiProvider",

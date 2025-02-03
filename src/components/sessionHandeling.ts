@@ -2,6 +2,7 @@ import { CLIArgs } from "../types/cliArgs";
 import { SessionSubCommand } from "../util/constants";
 import fs from "fs";
 import path from "path";
+import { readConfig } from "../util/tools";
 
 // Constants for consistent messaging
 const CONFIG_DIR = path.join(__dirname, "../../config");
@@ -16,7 +17,7 @@ export function handleSessionCommand(userArgs: CLIArgs) {
       console.log(`${STATUS_ICONS.SUCCESS} Created config directory`);
     }
 
-    let config = readConfigFile();
+    let config = readConfig();
 
     switch (userArgs?.subCommand) {
       case SessionSubCommand.START:
@@ -38,22 +39,6 @@ export function handleSessionCommand(userArgs: CLIArgs) {
       }`
     );
     process.exit(1);
-  }
-}
-
-function readConfigFile() {
-  try {
-    if (!fs.existsSync(CONFIG_PATH)) {
-      return { session: false }; // Default config
-    }
-
-    const configFile = fs.readFileSync(CONFIG_PATH, "utf8");
-    return JSON.parse(configFile);
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      throw new Error(`Invalid JSON in config file: ${CONFIG_PATH}`);
-    }
-    throw new Error(`Failed to read config file: ${(error as Error).message}`);
   }
 }
 

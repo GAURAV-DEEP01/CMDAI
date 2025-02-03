@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-import { analyzeCommandExecution } from "./util/analysisHandler";
 import readline from "readline";
 import { showVersion, showHelp } from "./components/info";
-import { Primary } from "./util/constants";
-import { ArgumentError, CommandExecutionError } from "./types/errors";
-import { getLastCommand, runCommand } from "./util/commandHistory";
+import { ConfigSubCommand, Primary } from "./util/constants";
+import { ArgumentError } from "./types/errors";
 import { handleSessionCommand } from "./components/sessionHandeling";
 import { parseCLIArgs } from "./components/argParser";
 import { CLIArgs } from "./types/cliArgs";
 import { initializeConfig } from "./util/configHandler";
-import inquirer from "inquirer";
-import clc from "cli-color";
-// import { checkLLM } from "./util/checkLLM";
+import { checkLLM } from "./util/checkLLM";
+import {
+  handleConfigCommand,
+  handleExecuteCommand,
+} from "./components/commandHandler";
 
 // Handle uncaught promise rejections
 process.on("unhandledRejection", (reason, promise) => {
@@ -28,8 +28,8 @@ async function main() {
   try {
     const config = await initializeConfig();
     const DEFAULT_MODEL = config.model;
-    //todo first check if llm running
-    // await checkLLM();
+
+    await checkLLM();
 
     let userArgs: CLIArgs;
     try {
@@ -42,7 +42,7 @@ async function main() {
       }
       process.exit(1);
     }
-
+    // console.log(userArgs);
     if (userArgs.help) {
       showHelp(DEFAULT_MODEL);
       process.exit(0);
@@ -63,7 +63,11 @@ async function main() {
     }
 
     if (userArgs.primary === Primary.EXECUTE) {
-      handleExecuteCommand(userArgs);
+      await handleExecuteCommand(userArgs);
+    }
+
+    if (userArgs.primary === Primary.CONFIG) {
+      await handleConfigCommand(userArgs.subCommand as ConfigSubCommand);
     }
 
     if (userArgs.primary === Primary.CHECK) {
@@ -77,69 +81,6 @@ async function main() {
     process.exit(1);
   } finally {
     rl.close();
-  }
-}
-
-async function handleExecuteCommand(userArgs: CLIArgs) {
-  try {
-    // Determine command source
-    const commandStr = userArgs.commandStr || getLastCommand();
-
-    if (!commandStr) {
-      throw new Error("No command provided and no history found");
-    }
-
-    // Validate command input
-    if (commandStr.trim().length === 0) {
-      throw new Error("Empty command provided");
-    }
-
-    // Execute the command
-    const [mainCommand, ...commandArgs] = commandStr.split(/\s+/);
-    const { output, error } = await runCommand(
-      mainCommand,
-      commandArgs,
-      userArgs.verbose
-    );
-    process.stdout.write(clc.green.bold.underline(`Result:`));
-    if (output) process.stdout.write(`${output}\n`);
-    if (error) process.stderr.write(`${error}\n`);
-
-    try {
-      // Determine if analysis should proceed
-      const answer = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "analyze",
-          message: `Run analysis with ${userArgs.model}?`,
-          default: true,
-        },
-      ]);
-
-      if (answer.analyze) {
-        await analyzeCommandExecution({
-          command: commandStr,
-          output,
-          error,
-          model: userArgs.model as string,
-          customPrompt: userArgs.prompt,
-          verbose: userArgs.verbose,
-        });
-      }
-    } catch (error) {
-      process.stderr.write("Exited");
-      process.exit(1);
-    }
-  } catch (error) {
-    if (error instanceof CommandExecutionError) {
-      process.stderr.write(`\nCommand failed: ${error.message}\n`);
-      process.exit(error.exitCode);
-    }
-
-    process.stderr.write(
-      `\nError: ${error instanceof Error ? error.message : "Unknown error"}\n`
-    );
-    process.exit(1);
   }
 }
 

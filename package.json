@@ -6,9 +6,8 @@
     "clai": "dist/clai.js"
   },
   "scripts": {
-    "build": "tsc",
     "dev": "npm run build && node dist/clai.js --",
-    "test": "npm unlink clai && npm run build && sudo npm link clai"
+    "package": "npm unlink clai && tsc && sudo npm link clai"
   },
   "keywords": [],
   "author": "",

@@ -96,6 +96,7 @@ export default async function queryLLM(
   }
 }
 
+//todo validate and parse using zod
 const validateAndParseResponse = (response: string): CommandAnalysis => {
   try {
     // Find the first instance of ```json

@@ -2,11 +2,6 @@ import { execSync, spawn } from "child_process";
 import inquirer from "inquirer";
 import { clearStdLine } from "../util/tools";
 
-// Helper: Fetch the last command from shell history
-export function getSessionCommandLog(): string {
-  // todo retuns log of
-  return "getsessioncommand";
-}
 export function runCommand(
   command: string,
   args: string[],
@@ -99,4 +94,10 @@ export function getLastCommand(): string {
     console.error("Failed to fetch the last command from history.");
     return "";
   }
+}
+
+// Helper: Fetch the last command from shell history
+export function getSessionCommandLog(): string {
+  // todo retuns log of
+  return "getsessioncommand";
 }

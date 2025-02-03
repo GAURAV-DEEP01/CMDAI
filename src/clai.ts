@@ -5,8 +5,8 @@ import { showVersion, showHelp } from "./components/info";
 import { Primary } from "./util/constants";
 import { ArgumentError, CommandExecutionError } from "./types/errors";
 import { getLastCommand, runCommand } from "./util/commandHistory";
-import { handleSessionCommand } from "./util/sessionHandeling";
-import { parseCLIArgs } from "./util/argParser";
+import { handleSessionCommand } from "./components/sessionHandeling";
+import { parseCLIArgs } from "./components/argParser";
 import { CLIArgs } from "./types/cliArgs";
 import { initializeConfig } from "./util/configHandler";
 import inquirer from "inquirer";
@@ -27,7 +27,7 @@ async function main() {
     const config = await initializeConfig();
     // todo fix default model
     const DEFAULT_MODEL = config.model || "deepseek-r1:7b";
-
+    //todo first check if llm running
     let userArgs: CLIArgs;
     try {
       userArgs = parseCLIArgs();
@@ -77,11 +77,6 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error("Critical error during execution:", err);
-  process.exit(1);
-});
-
 async function handleExecuteCommand(userArgs: CLIArgs) {
   try {
     // Determine command source
@@ -103,17 +98,21 @@ async function handleExecuteCommand(userArgs: CLIArgs) {
       commandArgs,
       userArgs.verbose
     );
-
-    // Display results
-    if (output) process.stdout.write(`\n${output}\n`);
-    if (error) process.stderr.write(`\n${error}\n`);
+    process.stdout.write(`\nResult:\n`);
+    if (output) process.stdout.write(`${output}\n`);
+    if (error) process.stderr.write(`${error}\n`);
 
     // Determine if analysis should proceed
-    const shouldAnalyze = userArgs.prompt
-      ? true // Auto-analyze if custom prompt provided
-      : await promptForAnalysis(userArgs.model);
+    const answer = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "analyze",
+        message: `Run analysis with ${userArgs.model}?`,
+        default: true,
+      },
+    ]);
 
-    if (shouldAnalyze) {
+    if (answer.analyze) {
       await analyzeCommandExecution({
         command: commandStr,
         output,
@@ -124,30 +123,19 @@ async function handleExecuteCommand(userArgs: CLIArgs) {
       });
     }
   } catch (error) {
-    handleExecuteError(error);
+    if (error instanceof CommandExecutionError) {
+      process.stderr.write(`\nCommand failed: ${error.message}\n`);
+      process.exit(error.exitCode);
+    }
+
+    process.stderr.write(
+      `\nError: ${error instanceof Error ? error.message : "Unknown error"}\n`
+    );
+    process.exit(1);
   }
 }
 
-async function promptForAnalysis(model?: string): Promise<boolean> {
-  const { analyze } = await inquirer.prompt([
-    {
-      type: "confirm",
-      name: "analyze",
-      message: `Run analysis with ${model || "default model"}?`,
-      default: true,
-    },
-  ]);
-  return analyze;
-}
-
-function handleExecuteError(error: unknown) {
-  if (error instanceof CommandExecutionError) {
-    process.stderr.write(`\nCommand failed: ${error.message}\n`);
-    process.exit(error.exitCode);
-  }
-
-  process.stderr.write(
-    `\nError: ${error instanceof Error ? error.message : "Unknown error"}\n`
-  );
+main().catch((err) => {
+  console.error("Critical error during execution:", err);
   process.exit(1);
-}
+});

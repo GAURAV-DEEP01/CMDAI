@@ -87,3 +87,5 @@ function detectShellEnvironment(error: string): string {
     "posix"
   );
 };
+
+//todo different default prompt when user inputs prompt

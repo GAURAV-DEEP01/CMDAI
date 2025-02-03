@@ -1,12 +1,12 @@
 import { CLIArgs } from "../types/cliArgs";
-import { SessionSubCommand } from "./constants";
+import { SessionSubCommand } from "../util/constants";
 import fs from "fs";
 import path from "path";
 
 // Constants for consistent messaging
-const CONFIG_DIR = path.join(__dirname, '../../config');
-const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
-const STATUS_ICONS = { SUCCESS: '✓', ERROR: '✗' };
+const CONFIG_DIR = path.join(__dirname, "../../config");
+const CONFIG_PATH = path.join(CONFIG_DIR, "config.json");
+const STATUS_ICONS = { SUCCESS: "✓", ERROR: "✗" };
 
 export function handleSessionCommand(userArgs: CLIArgs) {
   try {
@@ -32,7 +32,11 @@ export function handleSessionCommand(userArgs: CLIArgs) {
         throw new Error(`Invalid session sub-command: ${userArgs?.subCommand}`);
     }
   } catch (error) {
-    console.error(`${STATUS_ICONS.ERROR} ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error(
+      `${STATUS_ICONS.ERROR} ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
     process.exit(1);
   }
 }
@@ -43,7 +47,7 @@ function readConfigFile() {
       return { session: false }; // Default config
     }
 
-    const configFile = fs.readFileSync(CONFIG_PATH, 'utf8');
+    const configFile = fs.readFileSync(CONFIG_PATH, "utf8");
     return JSON.parse(configFile);
   } catch (error) {
     if (error instanceof SyntaxError) {
@@ -85,7 +89,7 @@ function handleSessionEnd(config: any) {
 }
 
 function handleSessionStatus(config: any) {
-  const status = config.session ? 'active' : 'inactive';
+  const status = config.session ? "active" : "inactive";
   const icon = config.session ? STATUS_ICONS.SUCCESS : STATUS_ICONS.ERROR;
   console.log(`${icon} Current session status: ${status}`);
 }

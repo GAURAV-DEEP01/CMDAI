@@ -98,7 +98,9 @@ export function getLastCommand(): string {
       const historyFile = `${process.env.HOME}/.bash_history`;
       historyCommand = `tail -n 1 ${historyFile}`;
     } else {
-      process.stderr.write("Unsupported shell. Please provide a command manually.\n");
+      process.stderr.write(
+        "Unsupported shell. Please provide a command manually.\n"
+      );
       return "";
     }
 

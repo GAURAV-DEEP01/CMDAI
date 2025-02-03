@@ -20,7 +20,7 @@ const DEFAULT_OLLAMA_MODELS = [
 ];
 
 const API_PROVIDERS = {
-  // todo fix this
+  // v2 fix this
   openai: ["gpt-3.5-turbo", "gpt-4"],
   anthropic: ["claude-2", "claude-instant"],
   google: ["t5-3b", "t5-11b"],
@@ -116,7 +116,7 @@ export async function runSetup() {
         default: (answers) => {
           switch (answers.apiProvider) {
             case "openai":
-              //todo check if apis are correct
+              //v2 check if apis are correct
               return "https://api.openai.com";
             case "anthropic":
               return "https://api.anthropic.com";

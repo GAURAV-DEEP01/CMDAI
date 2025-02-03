@@ -18,16 +18,9 @@ export async function analyzeCommandExecution(params: {
         params.customPrompt
       )
     : defaultPrompt(params.command, params.output, params.error);
-  const isDefaultPrompt = !!params.customPrompt;
 
   try {
-    const response = await queryLLM(
-      params.model,
-      input,
-      isDefaultPrompt,
-      params.verbose,
-      0
-    );
+    const response = await queryLLM(params.model, input, params.verbose, 0);
 
     // Handle the LLM response
     await handleResponse(response);

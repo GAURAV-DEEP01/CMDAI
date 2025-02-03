@@ -4,18 +4,18 @@ export enum Primary {
   CHECK = "check",
   VERSION = "version",
   HELP = "help",
-  CONFIG = "config" // Added new primary command
+  CONFIG = "config", // Added new primary command
 }
 
 export enum SessionSubCommand {
   START = "start",
   END = "end",
-  STATUS = "status"
+  STATUS = "status",
 }
 
 export enum ConfigSubCommand { // Added new config subcommands
   GET = "get",
-  SET = "set"
+  SET = "set",
 }
 
 export enum Flag {
@@ -25,6 +25,6 @@ export enum Flag {
   COMMAND = "--command",
   PROMPT = "--prompt",
   MODEL = "--model",
-  KEY = "--key",       // Added for config
-  VALUE = "--value"    // Added for config
+  KEY = "--key", // Added for config
+  VALUE = "--value", // Added for config
 }

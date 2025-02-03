@@ -17,9 +17,6 @@ const VALIDATION_SCHEMA = `// JSON Validation Requirements
 export default async function queryLLM(
   model: string,
   input: string,
-
-  //todo create custom prompt when true
-  isDefaultPrompt: boolean,
   verbose: boolean = false,
   retryCount: number = 0
 ): Promise<CommandAnalysis> {
@@ -79,13 +76,7 @@ export default async function queryLLM(
       console.log(
         `Retrying: ${error instanceof Error ? error.message : error}`
       );
-      return await queryLLM(
-        model,
-        input,
-        isDefaultPrompt,
-        verbose,
-        retryCount + 1
-      );
+      return await queryLLM(model, input, verbose, retryCount + 1);
     }
     process.stderr.write(
       clc.red(
@@ -96,7 +87,7 @@ export default async function queryLLM(
   }
 }
 
-//todo validate and parse using zod
+//v2 validate and parse using zod
 const validateAndParseResponse = (response: string): CommandAnalysis => {
   try {
     // Find the first instance of ```json

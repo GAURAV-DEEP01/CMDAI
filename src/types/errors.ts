@@ -9,7 +9,7 @@ export class ArgumentError extends Error {
   constructor(message: string, code: string) {
     super(message);
     this.code = code;
-    this.name = 'ArgumentError'; // Set custom error name
+    this.name = "ArgumentError"; // Set custom error name
   }
 }
 
@@ -19,7 +19,7 @@ export class CommandExecutionError extends Error {
   constructor(message: string, exitCode: number = 1) {
     super(message);
     this.exitCode = exitCode;
-    this.name = 'CommandExecutionError';
+    this.name = "CommandExecutionError";
     Object.setPrototypeOf(this, CommandExecutionError.prototype);
   }
 }

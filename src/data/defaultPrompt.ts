@@ -71,7 +71,7 @@ Respond ONLY with the \`\`\`json code block containing valid JSON. No commentary
   return userPrompt
     ? `${basePrompt}\n\nUser Context:\n${userPrompt}\n\nADAPTATION RULES:\n- Maintain JSON code block structure\n- Preserve schema format\n- Keep timestamps\n- Sanitize user input`
     : basePrompt;
-};
+}
 
 // Helper function to detect shell environment
 function detectShellEnvironment(error: string): string {
@@ -86,6 +86,6 @@ function detectShellEnvironment(error: string): string {
     Object.entries(patterns).find(([_, regex]) => regex.test(error))?.[0] ||
     "posix"
   );
-};
+}
 
-//todo different default prompt when user inputs prompt
+// v2 different prompt when user gives --ask flag

@@ -5,10 +5,15 @@ import {
   FileAnalysis,
   ResponseType,
 } from "../types/responseAnalysis";
+import { CLIArgs } from "../types/cliArgs";
+import { analyzeCommandExecution } from "../util/analysisHandler";
 
-export async function handleResponse(response: ResponseType) {
+export async function handleResponse(
+  response: ResponseType,
+  userArgs: CLIArgs
+) {
   if (isCommandAnalysis(response)) {
-    await handleCommandResponse(response);
+    await handleCommandResponse(response, userArgs);
   } else {
     handleFileResponse(response);
   }
@@ -20,7 +25,10 @@ function isCommandAnalysis(
   return (response as CommandAnalysis).corrected_command !== undefined;
 }
 
-async function handleCommandResponse(response: CommandAnalysis) {
+async function handleCommandResponse(
+  response: CommandAnalysis,
+  userArgs: CLIArgs
+) {
   process.stdout.write(clc.bold.underline("Command Validation Results\n"));
   process.stdout.write(
     clc.blue.bold("Description:") + ` ${response.description}\n`
@@ -44,11 +52,20 @@ async function handleCommandResponse(response: CommandAnalysis) {
   try {
     const [mainCommand, ...commandArgs] = response.corrected_command.split(" ");
     const { output, error } = await runCommand(mainCommand, commandArgs, true);
+
     if (error) {
       process.stderr.write(clc.red.bold("\nError:") + ` ${error}\n`);
     } else {
       process.stdout.write(clc.green.bold("\nOutput:") + ` ${output}\n`);
     }
+
+    userArgs.commandStr = response.corrected_command;
+    await analyzeCommandExecution({
+      command: response.corrected_command,
+      output,
+      error,
+      userArgs,
+    });
   } catch (e) {
     console.error(e);
   }

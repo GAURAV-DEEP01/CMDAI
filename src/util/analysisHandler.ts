@@ -24,7 +24,7 @@ export async function analyzeCommandExecution(params: {
   ]);
   clearStdLine();
 
-  if (!answer.analyze) process.exit(0);
+  if (!answer.analyze) process.exit(1);
 
   let input: string;
   if (fileContent) {
@@ -51,7 +51,7 @@ export async function analyzeCommandExecution(params: {
       0
     );
 
-    await handleResponse(response);
+    await handleResponse(response, userArgs);
   } catch (error) {
     console.error(
       "\nAnalysis failed:",

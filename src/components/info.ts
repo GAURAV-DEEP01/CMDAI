@@ -4,32 +4,29 @@ import clc from "cli-color";
 
 function showHelp() {
   process.stdout.write(`
-${clc.bold("Usage:")} ${clc.cyan("clai [command] [options]")}
-
-${clc.bold("Commands:")}
-  ${clc.green(
+    ${clc.bold("Usage:")} ${clc.cyan("clai [command] [options]")}
+    
+    ${clc.bold("Commands:")}
+    ${clc.green(
     "clai"
   )}                   Rerun the previous command and analyze output using ollama.
-  ${clc.green("clai config get")}        Show current configuration.
-  ${clc.green("clai config set")}        Update or reset configuration.
-
-${clc.bold("Options:")}
-  ${clc.yellow("--model=<name>")}       Specify AI model.
-  ${clc.yellow("-m=<name>")}            Specify AI model (shorthand).
-  ${clc.yellow("--prompt=<text>")}      Provide a custom AI prompt.
-  ${clc.yellow("-p=<text>")}            Provide a custom AI prompt (shorthand).
-  ${clc.yellow("--verbose")}            Enable detailed output.
-  ${clc.yellow("-v")}                   Enable detailed output (shorthand).
-  ${clc.yellow("--help")}               Show this help message.
-  ${clc.yellow("-h")}                   Show this help message (shorthand).
-  ${clc.yellow("--version")}            Show version information.
-  ${clc.yellow("-V")}                   Show version information (shorthand).
-
-${clc.bold("Examples:")}
-  ${clc.blue("clai")}                    # Rerun last command.
-  ${clc.blue('clai --model="deepseek-r1:7b" --verbose')}
-  ${clc.blue("clai --prompt=\"echo 'Hello, world!'\"")}\n
-`);
+    ${clc.green("clai config get")}        Show current configuration.
+    ${clc.green("clai config set")}        Update or reset configuration.
+  
+  ${clc.bold("Options:")}
+    ${clc.yellow("--model=<name>")}, ${clc.yellow("-m=<name>")}           Specify AI model.
+    ${clc.yellow("--prompt=<text>")}, ${clc.yellow("-p=<text>")}          Provide a custom AI prompt.
+    ${clc.yellow("--verbose")}, ${clc.yellow("-vb")}                      Enable detailed output.
+    ${clc.yellow("--help")}, ${clc.yellow("-h")}                          Show this help message.
+    ${clc.yellow("--version")}, ${clc.yellow("-v")}                       Show version information.
+    ${clc.yellow("--file=<file>")},${clc.yellow("-v")}                    Specify a file to process.
+  
+  ${clc.bold("Examples:")}
+    ${clc.blue("clai")}                    # Rerun last command.
+    ${clc.blue('clai --model="deepseek-r1:7b" --verbose')}
+    ${clc.blue("clai --prompt=\"echo 'Hello, world!'\"")}\n
+    ${clc.blue("clai --file=\"example.txt\"")}
+  `);
 }
 
 export function showInfo(userArgs: any) {

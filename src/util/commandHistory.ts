@@ -116,6 +116,20 @@ export function getLastCommand(offset: number = 1): string {
   }
 }
 
+export function detectShellEnvironment(error: string): string {
+  const patterns = {
+    bash: /(bash:|syntax error near unexpected token|declare -)/i,
+    zsh: /(zsh:|no matches found:|bad pattern)/i,
+    powershell: /(PS>|The term '.*' is not recognized)/i,
+    cmd: /'(.*)' is not recognized as an internal or external command/i,
+  };
+
+  return (
+    Object.entries(patterns).find(([_, regex]) => regex.test(error))?.[0] ||
+    "posix"
+  );
+}
+
 // Helper: Fetch the last command from shell history
 export function getSessionCommandLog(): string {
   // v2 retuns log of session

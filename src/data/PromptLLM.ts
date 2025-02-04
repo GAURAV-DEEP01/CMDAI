@@ -1,3 +1,5 @@
+import { detectShellEnvironment } from "../util/commandHistory";
+
 export function defaultPrompt(
   commandWithArguments: string,
   output: string,
@@ -100,6 +102,7 @@ ${validationSchema}
 
 Analysis Context:
 \`\`\`
+- FILE CONTENT: ${fileContent}
 - FILE SIZE: ${fileContent.length} bytes
 - ENCODING: UTF-8
 - CWD: ${process.cwd()}
@@ -132,21 +135,6 @@ Respond ONLY with the \`\`\`json code block containing valid JSON. No commentary
   return userPrompt
     ? `${basePrompt}\n\nUser Context:\n${userPrompt}\n\nADAPTATION RULES:\n- Maintain JSON code block structure\n- Preserve schema format\n- Keep timestamps\n- Sanitize user input`
     : basePrompt;
-}
-
-// Helper function to detect shell environment
-function detectShellEnvironment(error: string): string {
-  const patterns = {
-    bash: /(bash:|syntax error near unexpected token|declare -)/i,
-    zsh: /(zsh:|no matches found:|bad pattern)/i,
-    powershell: /(PS>|The term '.*' is not recognized)/i,
-    cmd: /'(.*)' is not recognized as an internal or external command/i,
-  };
-
-  return (
-    Object.entries(patterns).find(([_, regex]) => regex.test(error))?.[0] ||
-    "posix"
-  );
 }
 
 // v2 different prompt when user gives --ask flag

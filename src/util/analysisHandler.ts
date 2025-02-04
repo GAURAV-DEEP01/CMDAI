@@ -34,11 +34,11 @@ export async function analyzeCommandExecution(params: {
   } else {
     input = userArgs.prompt
       ? defaultPrompt(
-          params.command!,
-          params.output || "",
-          params.error || "",
-          userArgs.prompt
-        )
+        params.command!,
+        params.output || "",
+        params.error || "",
+        userArgs.prompt
+      )
       : defaultPrompt(params.command!, params.output || "", params.error || "");
   }
 

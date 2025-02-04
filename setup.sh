@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Configuration
 REPO_URL="https://github.com/GAURAV-DEEP01/CLAI"
-REPO_DIR="$HOME/clai-repo"
+REPO_DIR="$HOME/clai"
 CLAI_DIR="$HOME/.clai"
 
 # Check required dependencies
@@ -30,19 +30,25 @@ clone_repo() {
 
 # Configure shell history settings
 configure_shellrc() {
-    local shell_rc
-    local config_content
-
-    if [[ "$SHELL" == *bash ]]; then
+    local shell_rc=""
+    if [[ "$SHELL" == */bash ]]; then
         shell_rc="$HOME/.bashrc"
-        config_content="# CLAI Configuration
+
+        local config_content="# CLAI Configuration
 PROMPT_COMMAND=\"history -a\"
 shopt -s histappend"
+
         if ! grep -qF "# CLAI Configuration" "$shell_rc"; then
             echo "Updating $shell_rc configuration..."
             echo "$config_content" >> "$shell_rc"
         fi
+    elif [[ "$SHELL" == */zsh ]]; then
+        shell_rc="$HOME/.zshrc"
+    else
+        echo "Unsupported shell: $SHELL. Please manually configure shell settings."
+        return 1
     fi
+
     echo "$shell_rc"
 }
 
@@ -73,9 +79,12 @@ main() {
     shell_rc=$(configure_shellrc) || exit 1
     create_clai_dir
     build_project
-    
     echo -e "\nCLAI setup completed successfully!"
-    echo "You may need to restart your shell or run: source $shell_rc"
+    
+    if [[ "$SHELL" == */bash ]]; then
+        echo "You may need to restart your shell or run: source $shell_rc"
+    fi
 }
+
 
 main "$@"

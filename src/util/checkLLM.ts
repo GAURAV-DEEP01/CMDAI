@@ -1,5 +1,7 @@
 import { initializeConfig } from "./configHandler";
 import { Config } from "../types/config";
+import { execSync } from "child_process";
+import clc from "cli-color";
 
 // not fixed
 async function pingEndpoint(urlString: string): Promise<boolean> {
@@ -16,6 +18,20 @@ async function pingEndpoint(urlString: string): Promise<boolean> {
 
 export async function checkLLM(config: Config) {
   let baseUrl = config.baseUrl;
+
+  // Check if Ollama is installed
+  if (config.provider === "ollama") {
+    try {
+      execSync("which ollama", { stdio: "ignore" });
+    } catch (error) {
+      process.stderr.write(
+        `Ollama is not installed. Please install it to proceed.\nVisit ${clc.blue.underline(
+          "https://ollama.com/download"
+        )}\n`
+      );
+      process.exit(1);
+    }
+  }
 
   // If baseUrl is not configured, initialize it
   if (!baseUrl) {
@@ -34,6 +50,9 @@ export async function checkLLM(config: Config) {
   if (!isAlive) {
     process.stderr.write(`Error: Unable to connect to LLM at ${baseUrl}\n`);
     process.stderr.write("Please check if the service is running\n");
+    process.stderr.write(
+      `Example: ${clc.bold("ollama run ")}${clc.green("<model_name>")}\n`
+    );
     process.exit(0);
   }
 }

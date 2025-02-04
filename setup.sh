@@ -1,10 +1,13 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env sh
+set -e
 
 # Configuration
 REPO_URL="https://github.com/GAURAV-DEEP01/CLAI"
 REPO_DIR="$HOME/clai"
 CLAI_DIR="$HOME/.clai"
+
+# Detect shell type
+SHELL_NAME=$(basename "$SHELL")
 
 # Check required dependencies
 check_dependency() {
@@ -19,7 +22,7 @@ check_dependency npm
 
 # Clone repository
 clone_repo() {
-    if [[ -d "$REPO_DIR" ]]; then
+    if [ -d "$REPO_DIR" ]; then
         echo "Repository already exists at $REPO_DIR. Pulling latest changes..."
         git -C "$REPO_DIR" pull
     else
@@ -31,30 +34,29 @@ clone_repo() {
 # Configure shell history settings
 configure_shellrc() {
     local shell_rc=""
-    if [[ "$SHELL" == */bash ]]; then
-        shell_rc="$HOME/.bashrc"
-
-        local config_content="# CLAI Configuration
-PROMPT_COMMAND=\"history -a\"
-shopt -s histappend"
-
-        if ! grep -qF "# CLAI Configuration" "$shell_rc"; then
-            echo "Updating $shell_rc configuration..."
-            echo "$config_content" >> "$shell_rc"
-        fi
-    elif [[ "$SHELL" == */zsh ]]; then
-        shell_rc="$HOME/.zshrc"
-    else
-        echo "Unsupported shell: $SHELL. Please manually configure shell settings."
-        return 1
-    fi
-
+    case "$SHELL_NAME" in
+        bash) 
+            shell_rc="$HOME/.bashrc"
+            local config_content="# CLAI Configuration\nPROMPT_COMMAND=\"history -a\"\nshopt -s histappend"
+            if ! grep -qF "# CLAI Configuration" "$shell_rc" 2>/dev/null; then
+                echo "Updating $shell_rc configuration..."
+                echo "$config_content" >> "$shell_rc"
+            fi
+            ;;
+        zsh)  
+            shell_rc="$HOME/.zshrc" 
+            ;;
+        *)    
+            echo "Error: Unsupported shell. Please use a supported shell such as bash or zsh." 
+            return 1 
+            ;;
+    esac
     echo "$shell_rc"
 }
 
 # Create .clai directory
 create_clai_dir() {
-    if [[ ! -d "$CLAI_DIR" ]]; then
+    if [ ! -d "$CLAI_DIR" ]; then
         echo "Creating CLAI directory at $CLAI_DIR..."
         mkdir -p "$CLAI_DIR"
     fi
@@ -65,8 +67,8 @@ build_project() {
     echo "Building project..."
     cd "$REPO_DIR"
     npm install
-    if [[ "$SHELL" == *bash ]]; then
-         sudo npm run package
+    if [ "$SHELL_NAME" = "bash" ]; then
+        sudo npm run package
     else
         npm run package
     fi
@@ -75,16 +77,16 @@ build_project() {
 # Main execution flow
 main() {
     clone_repo
-    local shell_rc
     shell_rc=$(configure_shellrc) || exit 1
     create_clai_dir
     build_project
-    echo -e "\nCLAI setup completed successfully!"
-    
-    if [[ "$SHELL" == */bash ]]; then
+    echo "\nCLAI setup completed successfully!"
+    if [ "$SHELL_NAME" = "bash" ]; then
         echo "You may need to restart your shell or run: source $shell_rc"
+    fi
+    if ! command -v ollama >/dev/null 2>&1; then
+        echo "Ollama is not installed. You may need to install Ollama."
     fi
 }
 
-
-main "$@"
+main

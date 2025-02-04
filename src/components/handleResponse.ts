@@ -7,6 +7,8 @@ import {
 } from "../types/responseAnalysis";
 import { CLIArgs } from "../types/cliArgs";
 import { analyzeCommandExecution } from "../util/analysisHandler";
+import inquirer from "inquirer";
+import { clearStdLine } from "../util/tools";
 
 export async function handleResponse(
   response: ResponseType,
@@ -59,7 +61,19 @@ async function handleCommandResponse(
       process.stdout.write(clc.green.bold("\nOutput:") + ` ${output}\n`);
     }
 
-    userArgs.commandStr = response.corrected_command;
+    const answer = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "analyze",
+        message: `Run analysis with this result?`,
+        default: true,
+      },
+    ]);
+    clearStdLine();
+
+    if (!answer.analyze) process.exit(1);
+
+
     await analyzeCommandExecution({
       command: response.corrected_command,
       output,

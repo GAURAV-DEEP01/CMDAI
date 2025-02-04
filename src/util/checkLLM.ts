@@ -3,16 +3,16 @@ import { Config } from "../types/config";
 import { execSync } from "child_process";
 import clc from "cli-color";
 
-// not fixed
+// to do use ai api from vercel
 async function pingEndpoint(urlString: string): Promise<boolean> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000); // 7-second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
     const response = await fetch(urlString, { signal: controller.signal });
-    clearTimeout(timeoutId); // Clear the timeout if the request succeeds
-    return response.ok; // Returns true if status is 2xx
+    clearTimeout(timeoutId);
+    return response.ok;
   } catch (error) {
-    return false; // Returns false if the request fails or times out
+    return false;
   }
 }
 

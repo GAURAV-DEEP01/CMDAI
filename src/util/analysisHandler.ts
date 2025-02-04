@@ -1,8 +1,6 @@
 import { defaultPrompt, filePrompt } from "../data/PromptLLM";
 import { handleResponse } from "../components/handleResponse";
 import queryLLM from "../components/queryLLM";
-import inquirer from "inquirer";
-import { clearStdLine } from "./tools";
 import { CLIArgs } from "../types/cliArgs";
 
 export async function analyzeCommandExecution(params: {
@@ -13,19 +11,6 @@ export async function analyzeCommandExecution(params: {
   fileContent?: string;
 }) {
   const { userArgs, fileContent } = params;
-
-  const answer = await inquirer.prompt([
-    {
-      type: "confirm",
-      name: "analyze",
-      message: `Run analysis with ${userArgs.model}?`,
-      default: true,
-    },
-  ]);
-  clearStdLine();
-
-  if (!answer.analyze) process.exit(1);
-
   let input: string;
   if (fileContent) {
     input = userArgs.prompt

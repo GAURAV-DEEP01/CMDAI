@@ -6,14 +6,6 @@ import { ResponseType } from "../types/responseAnalysis";
 
 const MAX_RETRIES = 3;
 
-const VALIDATION_SCHEMA = `// JSON Validation Requirements
-{
-  "description": "string (technical explanation)",
-  "possible_fixes": ["string", "...", "..."],
-  "corrected_command": "string (directly executable)",
-  "explanation": "string? (detailed analysis)",
-}
-`;
 export default async function queryLLM(
   model: string,
   input: string,
@@ -26,6 +18,24 @@ export default async function queryLLM(
       process.stdout.write(
         `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\n`
       );
+
+    const VALIDATION_SCHEMA = `// JSON Validation Requirements ${
+      isFile
+        ? `{
+    "file_type": "string (type of the file being analyzed)",
+    "summary": "string (brief summary of the file)",
+    "issues": ["string", "...", "..."],
+    "recommendations": ["string", "...", "..."],
+    "security_analysis": "string (detailed security analysis)"
+  }`
+        : `
+  {
+    "description": "string (technical explanation)",
+    "possible_fixes": ["string", "...", "..."],
+    "corrected_command": "string (directly executable)",
+    "explanation": "string? (detailed analysis)",
+  }`
+    }`;
 
     let i = 0;
     let interval: NodeJS.Timeout | null = null;
@@ -45,7 +55,7 @@ export default async function queryLLM(
           role: "user",
           content:
             retryCount > 0
-              ? `${input}\n\nINVALID RESPONSE - CORRECT FORMAT:\n${VALIDATION_SCHEMA}`
+              ? `${input}\n\nCORRECT FORMAT:\n${VALIDATION_SCHEMA}`
               : input,
         },
       ],
@@ -65,6 +75,7 @@ export default async function queryLLM(
         );
       }, 50);
     }
+    process.stdout.write("\n");
 
     try {
       for await (const part of response) {
@@ -101,18 +112,19 @@ export default async function queryLLM(
 //v2 validate and parse using zod
 const validateAndParseResponse = (response: string): ResponseType => {
   try {
-    const jsonStartIndex = response.indexOf("```json");
-    const jsonEndIndex = response.indexOf("```", jsonStartIndex + 6);
+    const jsonBlockRegex = /```json\s*([\s\S]*?)\s*```/;
+    const match = response.match(jsonBlockRegex);
 
-    if (jsonStartIndex === -1 || jsonEndIndex === -1) {
+    if (!match || !match[1]) {
       throw new Error("No valid JSON code block found");
     }
 
-    const jsonString = response
-      .slice(jsonStartIndex + 6, jsonEndIndex)
+    const jsonString = match[1]
       .trim()
       .replace(/[\u2018\u2019]/g, "'")
-      .replace(/[\u201C\u201D]/g, '"');
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/^[\x00-\x1F]+/, "") // Remove control characters
+      .replace(/(\r\n|\n|\r)/gm, ""); // Remove newlines
 
     const parsed = JSON.parse(jsonString);
 

@@ -26,7 +26,15 @@ export default async function queryLLM(
         `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\n`
       );
 
-    process.stdout.write(`Thinking`);
+    let i = 0;
+    let interval: NodeJS.Timeout | null = null;
+    let connecting: NodeJS.Timeout | null = null;
+    connecting = setInterval(() => {
+      process.stdout.write(
+        `\rConnecting to model ${loadingAnimation[i++ % loadingAnimation.length]}`
+      );
+    }, 50);
+
     const response = await ollama.chat({
       model,
       messages: [
@@ -43,8 +51,8 @@ export default async function queryLLM(
     process.stdout.write(clc.erase.line);
 
     let aiOutput = "";
-    let interval: NodeJS.Timeout | null = null;
 
+    clearInterval(connecting);
     // Start loading animation if not verbose
     if (!verbose) {
       let i = 0;
@@ -153,8 +161,7 @@ const validateAndParseResponse = (response: string): CommandAnalysis => {
     };
   } catch (error) {
     throw new Error(
-      `Response validation failed: ${
-        error instanceof Error ? error.message : error
+      `Response validation failed: ${error instanceof Error ? error.message : error
       }`
     );
   }

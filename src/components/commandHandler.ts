@@ -56,7 +56,6 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
         });
       }
     } catch (error) {
-      process.stderr.write("Exited");
       process.exit(1);
     }
   } catch (error) {

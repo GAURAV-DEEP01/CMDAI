@@ -3,6 +3,7 @@ import {
   Flag,
   SessionSubCommand,
   ConfigSubCommand,
+  ShortFlag,
 } from "../util/constants";
 import { CLIArgs } from "../types/cliArgs";
 import { ArgumentError } from "../types/errors";
@@ -11,29 +12,32 @@ import { ArgumentError } from "../types/errors";
 // clai
 // clai config set
 // clai config get
+// clai --version
+// clai --help
+// clai --verbose
+// clai --command="<command>"
+// clai --prompt="<prompt>"
+// clai --command="<command>" --verbose
+// clai --prompt="<prompt>" --verbose
+// clai --command="<command>" --prompt="<prompt>"
+// clai --command="<command>" --prompt="<prompt>" --verbose
+
+// v2
 // clai session start
 // clai check
 // clai session end
 // clai session status
-// clai version
-// clai help
-// clai --verbose
-// clai --command="<command>"
-// clai --prompt="<prompt>"
-// clai --command="<command>" --prompt="<prompt>"
-// clai --command="<command>" --verbose
-// clai --prompt="<prompt>" --verbose
-// clai --command="<command>" --prompt="<prompt>" --verbose
+// clai --ask="<question>"
+// clai --file="<file>"
+// clai --file="<file>" --prompt="<question>"
 
 // Command structure definition for easy extension
 const commandStructure: any = {
   [Primary.SESSION]: {
     subCommands: Object.values(SessionSubCommand),
-    flags: [Flag.VERBOSE],
   },
   [Primary.CONFIG]: {
     subCommands: Object.values(ConfigSubCommand),
-    flags: [Flag.KEY, Flag.VALUE, Flag.VERBOSE],
   },
   [Primary.CHECK]: {
     flags: [Flag.PROMPT, Flag.VERBOSE],
@@ -101,7 +105,6 @@ function parseSubCommand<T>(
   } as CLIArgs;
 }
 
-// Generic flag parser
 function parseFlags(args: string[], primary: Primary): Partial<CLIArgs> {
   const result: Partial<CLIArgs> = {};
   const allowedFlags = commandStructure[primary]?.flags || [];
@@ -119,8 +122,6 @@ function parseFlags(args: string[], primary: Primary): Partial<CLIArgs> {
     }
 
     switch (flag) {
-      case Flag.KEY:
-      case Flag.VALUE:
       case Flag.PROMPT:
       case Flag.COMMAND:
       case Flag.MODEL:
@@ -166,6 +167,19 @@ function findPrimaryCommand(args: string[]): Primary {
   return cmd ? commandMap[cmd] : Primary.EXECUTE;
 }
 
+function getLongFlag(shortFlag: string): string | undefined {
+  const shortFlagMap: { [key: string]: string } = {
+    [ShortFlag.VERBOSE]: Flag.VERBOSE,
+    [ShortFlag.VERSION]: Flag.VERSION,
+    [ShortFlag.HELP]: Flag.HELP,
+    [ShortFlag.COMMAND]: Flag.COMMAND,
+    [ShortFlag.PROMPT]: Flag.PROMPT,
+    [ShortFlag.MODEL]: Flag.MODEL,
+  };
+
+  return shortFlagMap[shortFlag];
+}
+
 function normalizeArgs(args: string[]): string[] {
   const normalized: string[] = [];
   let currentArg = "";
@@ -175,36 +189,83 @@ function normalizeArgs(args: string[]): string[] {
   while (i < args.length) {
     const arg = args[i];
 
-    // handle quoted values in --flag="value" format
-    if (arg.startsWith("--") && arg.includes('="')) {
-      const [flag, ...rest] = arg.split('="');
-      const value = rest.join('="');
-
-      if (value.endsWith('"')) {
-        normalized.push(`${flag}=${value.slice(0, -1)}`);
-      } else {
-        currentArg = `${flag}=${value}`;
-        inQuotes = true;
+    if (isShortFlag(arg)) {
+      handleShortFlag(arg, normalized);
+    } else if (isQuotedFlag(arg)) {
+      if (!handleQuotedFlag(arg, normalized)) {
+        process.stderr.write(`Error: Unmatched quotes in argument: ${arg}\n`);
       }
-    }
-    // continue collecting quoted value
-    else if (inQuotes) {
-      if (arg.endsWith('"')) {
-        normalized.push(`${currentArg} ${arg.slice(0, -1)}`);
-        currentArg = "";
-        inQuotes = false;
-      } else {
-        currentArg += ` ${arg}`;
-      }
-    }
-    // regular argument
-    else {
-      normalized.push(arg);
+    } else if (inQuotes) {
+      handleContinuedQuotedValue(arg, normalized, currentArg, { inQuotes });
+    } else {
+      handleRegularArgument(arg, normalized);
     }
 
     i++;
   }
+
   return normalized;
+}
+
+function isShortFlag(arg: string): boolean {
+  return arg.startsWith("-") && !arg.startsWith("--") && arg.length > 1;
+}
+
+function handleShortFlag(arg: string, normalized: string[]): void {
+  // Extract the flag part before '='
+  const shortFlag = arg.split("=")[0];
+  const longFlag = getLongFlag(shortFlag);
+
+  if (longFlag) {
+    if (arg.includes("=")) {
+      // Handle cases like -c="value"
+      const value = arg.split("=")[1];
+      normalized.push(`${longFlag}=${value}`);
+    } else {
+      normalized.push(longFlag);
+    }
+  } else {
+    process.stderr.write("Invalid flag: " + arg + "\n");
+    process.exit(1);
+  }
+}
+
+function isQuotedFlag(arg: string): boolean {
+  return arg.startsWith("--") && arg.includes('="');
+}
+
+function handleQuotedFlag(
+  arg: string,
+  normalized: string[]
+): boolean {
+  const [flag, ...rest] = arg.split('="');
+  const value = rest.join('="');
+
+  if (value.endsWith('"')) {
+    normalized.push(`${flag}=${value.slice(0, -1)}`);
+    return false;
+  } else {
+    return true;
+  }
+}
+
+function handleContinuedQuotedValue(
+  arg: string,
+  normalized: string[],
+  currentArg: string,
+  quotesRef: { inQuotes: boolean }
+): void {
+  if (arg.endsWith('"')) {
+    normalized.push(`${currentArg} ${arg.slice(0, -1)}`);
+    currentArg = "";
+    quotesRef.inQuotes = false;
+  } else {
+    currentArg += ` ${arg}`;
+  }
+}
+
+function handleRegularArgument(arg: string, normalized: string[]): void {
+  normalized.push(arg);
 }
 
 function handleSpecialCases(primary: Primary, args: string[]): CLIArgs | null {
@@ -218,8 +279,7 @@ function handleSpecialCases(primary: Primary, args: string[]): CLIArgs | null {
     }
   }
 
-  // v2
-  // Handle check command
+  // v2 Handle check command
   if (primary === Primary.CHECK) {
     const result: Partial<CLIArgs> = { primary: Primary.CHECK };
 
@@ -247,10 +307,8 @@ function handleSpecialCases(primary: Primary, args: string[]): CLIArgs | null {
       }
       i++;
     }
-
     return result as CLIArgs;
   }
-
   return null;
 }
 
@@ -319,8 +377,7 @@ function validateCommandCombinations(args: Partial<CLIArgs>): void {
     );
     if (hasOtherFlags) {
       throw new ArgumentError(
-        `${
-          args.help ? "Help" : "Version"
+        `${args.help ? "Help" : "Version"
         } flag cannot be combined with other flags`,
         "INVALID_FLAG_COMBINATION"
       );

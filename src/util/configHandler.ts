@@ -134,7 +134,6 @@ export async function runSetup() {
       },
     ]);
   } catch (error) {
-    process.stderr.write("Exited");
     process.exit(1);
   }
 

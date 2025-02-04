@@ -25,6 +25,13 @@ export enum Flag {
   COMMAND = "--command",
   PROMPT = "--prompt",
   MODEL = "--model",
-  KEY = "--key", // Added for config
-  VALUE = "--value", // Added for config
+}
+
+export enum ShortFlag {
+  VERBOSE = "-vb",
+  VERSION = "-v",
+  HELP = "-h",
+  COMMAND = "-c",
+  PROMPT = "-p",
+  MODEL = "-m",
 }

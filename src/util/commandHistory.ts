@@ -13,7 +13,7 @@ export function runCommand(
         {
           type: "confirm",
           name: "analyze",
-          message: `Do you want to run: ${command} ${args.join(" ")}?: `,
+          message: `Do you want to run: ${command} ${args.join(" ")}?`,
           default: true,
         },
       ]);

@@ -2,13 +2,6 @@ import * as fs from "fs";
 import * as path from "path";
 import clc from "cli-color";
 
-// v2 additional commands:
-// ${clc.blue("clai session start")}
-// ${clc.blue("clai check")}              # Works only in session mode.
-// ${clc.blue("clai session end")}
-// ${clc.blue("clai session status")}
-
-//todo fix
 function showHelp() {
   process.stdout.write(`
 ${clc.bold("Usage:")} ${clc.cyan("clai [command] [options]")}
@@ -16,22 +9,21 @@ ${clc.bold("Usage:")} ${clc.cyan("clai [command] [options]")}
 ${clc.bold("Commands:")}
   ${clc.green(
     "clai"
-  )}                   Run the last command and feed output to AI.
-  ${clc.green(
-    "clai session start"
-  )}     Start a session (stores commands and outputs).
-  ${clc.green("clai session end")}       End the current session.
-  ${clc.green("clai session status")}    Show session status.
-  ${clc.green(
-    "clai check"
-  )}             Analyze last command (session mode only).
+  )}                   Rerun the previous command and analyze output using ollama.
+  ${clc.green("clai config get")}        Show current configuration.
+  ${clc.green("clai config set")}        Update or reset configuration.
 
 ${clc.bold("Options:")}
   ${clc.yellow("--model=<name>")}       Specify AI model.
+  ${clc.yellow("-m=<name>")}            Specify AI model (shorthand).
   ${clc.yellow("--prompt=<text>")}      Provide a custom AI prompt.
+  ${clc.yellow("-p=<text>")}            Provide a custom AI prompt (shorthand).
   ${clc.yellow("--verbose")}            Enable detailed output.
+  ${clc.yellow("-v")}                   Enable detailed output (shorthand).
   ${clc.yellow("--help")}               Show this help message.
-  ${clc.yellow("--version")}            Show version info.
+  ${clc.yellow("-h")}                   Show this help message (shorthand).
+  ${clc.yellow("--version")}            Show version information.
+  ${clc.yellow("-V")}                   Show version information (shorthand).
 
 ${clc.bold("Examples:")}
   ${clc.blue("clai")}                    # Rerun last command.
@@ -62,3 +54,18 @@ function showVersion() {
     console.error(`${clc.red("Error reading version:")}`, error);
   }
 }
+
+// v2 additional commands:
+// ${clc.blue("clai session start")}
+// ${clc.blue("clai check")}              # Works only in session mode.
+// ${clc.blue("clai session end")}
+// ${clc.blue("clai session status")}
+
+// ${clc.green(
+//   "clai session start"
+// )}     Start a session (stores commands and outputs).
+// ${clc.green("clai session end")}       End the current session.
+// ${clc.green("clai session status")}    Show session status.
+// ${clc.green(
+//   "clai check"
+// )}             Analyze last command (session mode only).

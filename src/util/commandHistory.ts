@@ -92,8 +92,9 @@ export function getLastCommand(offset: number = 1): string {
 
     if (shell.includes("zsh")) {
       const historyFile = process.env.HISTFILE || "~/.zsh_history";
-      historyCommand = `tail -n ${offset + 1
-        } ${historyFile} | head -n 1 | sed 's/^: [0-9]*:[0-9];//'`;
+      historyCommand = `tail -n ${
+        offset + 1
+      } ${historyFile} | head -n 1 | sed 's/^: [0-9]*:[0-9];//'`;
     } else if (shell.includes("bash")) {
       const historyFile = `${process.env.HOME}/.bash_history`;
       historyCommand = `tail -n ${offset} ${historyFile} | head -n 1`;
@@ -119,6 +120,6 @@ export function getLastCommand(offset: number = 1): string {
 
 // Helper: Fetch the last command from shell history
 export function getSessionCommandLog(): string {
-  // todo retuns log of
+  // v2 retuns log of session
   return "getsessioncommand";
 }

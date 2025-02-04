@@ -16,7 +16,6 @@ check_dependency() {
 
 check_dependency git
 check_dependency npm
-check_dependency ollama
 
 # Clone repository
 clone_repo() {
@@ -60,7 +59,11 @@ build_project() {
     echo "Building project..."
     cd "$REPO_DIR"
     npm install
-    sudo npm run package
+    if [[ "$SHELL" == *bash ]]; then
+         sudo npm run package
+    else
+        npm run package
+    fi
 }
 
 # Main execution flow

@@ -2,7 +2,7 @@ import ollama from "ollama";
 
 import clc from "cli-color";
 import { loadingAnimation } from "../util/tools";
-import { CommandAnalysis } from "../types/commandAnalysis";
+import { ResponseType } from "../types/responseAnalysis";
 
 const MAX_RETRIES = 3;
 
@@ -12,14 +12,15 @@ const VALIDATION_SCHEMA = `// JSON Validation Requirements
   "possible_fixes": ["string", "...", "..."],
   "corrected_command": "string (directly executable)",
   "explanation": "string? (detailed analysis)",
-}`;
-
+}
+`;
 export default async function queryLLM(
   model: string,
   input: string,
   verbose: boolean = false,
+  isFile: boolean,
   retryCount: number = 0
-): Promise<CommandAnalysis> {
+): Promise<ResponseType> {
   try {
     if (retryCount !== 0)
       process.stdout.write(
@@ -31,7 +32,9 @@ export default async function queryLLM(
     let connecting: NodeJS.Timeout | null = null;
     connecting = setInterval(() => {
       process.stdout.write(
-        `\rConnecting to model ${loadingAnimation[i++ % loadingAnimation.length]}`
+        `\rConnecting to model ${
+          loadingAnimation[i++ % loadingAnimation.length]
+        }`
       );
     }, 50);
 
@@ -84,7 +87,7 @@ export default async function queryLLM(
       console.error(
         `Retrying: ${error instanceof Error ? error.message : error}`
       );
-      return await queryLLM(model, input, verbose, retryCount + 1);
+      return await queryLLM(model, input, verbose, isFile, retryCount + 1);
     }
     process.stderr.write(
       clc.red(
@@ -96,72 +99,89 @@ export default async function queryLLM(
 }
 
 //v2 validate and parse using zod
-const validateAndParseResponse = (response: string): CommandAnalysis => {
+const validateAndParseResponse = (response: string): ResponseType => {
   try {
-    // Find the first instance of ```json
     const jsonStartIndex = response.indexOf("```json");
-    if (jsonStartIndex === -1) {
-      throw new Error("No JSON block found in the response.");
+    const jsonEndIndex = response.indexOf("```", jsonStartIndex + 6);
+
+    if (jsonStartIndex === -1 || jsonEndIndex === -1) {
+      throw new Error("No valid JSON code block found");
     }
 
-    // Extract the content after ```json
-    const jsonContent = response.substring(jsonStartIndex + "```json".length);
+    const jsonString = response
+      .slice(jsonStartIndex + 6, jsonEndIndex)
+      .trim()
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"');
 
-    // Find the closing ``` after the JSON block
-    const jsonEndIndex = jsonContent.indexOf("```");
-    if (jsonEndIndex === -1) {
-      throw new Error("No closing ``` found for the JSON block.");
+    const parsed = JSON.parse(jsonString);
+
+    // Determine response type based on content
+    if ("corrected_command" in parsed) {
+      // Command Analysis Validation
+      const commandFields = [
+        "description",
+        "possible_fixes",
+        "corrected_command",
+      ];
+      const missingCommandFields = commandFields.filter((f) => !(f in parsed));
+      if (missingCommandFields.length > 0) {
+        throw new Error(
+          `Missing command fields: ${missingCommandFields.join(", ")}`
+        );
+      }
+
+      if (!Array.isArray(parsed.possible_fixes)) {
+        throw new Error("possible_fixes must be an array");
+      }
+
+      if (!isValidCommand(parsed.corrected_command)) {
+        throw new Error(
+          `Dangerous command detected: ${parsed.corrected_command}`
+        );
+      }
+
+      return {
+        description: parsed.description,
+        possible_fixes: parsed.possible_fixes,
+        corrected_command: sanitizeCommand(parsed.corrected_command),
+        explanation: parsed.explanation || "",
+      };
+    } else if ("file_type" in parsed) {
+      // File Analysis Validation
+      const fileFields = [
+        "file_type",
+        "summary",
+        "issues",
+        "recommendations",
+        "security_analysis",
+      ];
+      const missingFileFields = fileFields.filter((f) => !(f in parsed));
+      if (missingFileFields.length > 0) {
+        throw new Error(`Missing file fields: ${missingFileFields.join(", ")}`);
+      }
+
+      if (
+        !Array.isArray(parsed.issues) ||
+        !Array.isArray(parsed.recommendations)
+      ) {
+        throw new Error("Issues and recommendations must be arrays");
+      }
+
+      return {
+        file_type: parsed.file_type,
+        summary: parsed.summary,
+        issues: parsed.issues,
+        recommendations: parsed.recommendations,
+        security_analysis: parsed.security_analysis,
+      };
     }
 
-    // Extract the JSON string and clean it
-    const jsonString = jsonContent
-      .substring(0, jsonEndIndex) // Extract the JSON block
-      .trim() // Remove leading/trailing whitespace
-      .replace(/[\u2018\u2019]/g, "'") // Handle smart quotes
-      .replace(/[\u201C\u201D]/g, '"'); // Handle smart double quotes
-
-    // Parse the JSON string
-    const parsed: CommandAnalysis = JSON.parse(jsonString);
-
-    // Schema validation
-    const requiredFields = [
-      "description",
-      "possible_fixes",
-      "corrected_command",
-    ];
-
-    const missingFields = requiredFields.filter((field) => !(field in parsed));
-    if (missingFields.length > 0) {
-      throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
-    }
-
-    // Command safety check
-    if (!isValidCommand(parsed.corrected_command)) {
-      throw new Error(`Invalid command: ${parsed.corrected_command}`);
-    }
-
-    // Type validation
-    if (!Array.isArray(parsed.possible_fixes)) {
-      throw new Error("possible_fixes must be an array");
-    }
-
-    // Enhanced validation
-    if (
-      parsed.corrected_command.includes("&&") ||
-      parsed.corrected_command.includes("||")
-    ) {
-      throw new Error("Compound commands are not allowed");
-    }
-
-    return {
-      description: parsed.description,
-      possible_fixes: parsed.possible_fixes,
-      corrected_command: sanitizeCommand(parsed.corrected_command),
-      explanation: parsed.explanation || "",
-    };
+    throw new Error("Unknown response format");
   } catch (error) {
     throw new Error(
-      `Response validation failed: ${error instanceof Error ? error.message : error
+      `Response validation failed: ${
+        error instanceof Error ? error.message : error
       }`
     );
   }

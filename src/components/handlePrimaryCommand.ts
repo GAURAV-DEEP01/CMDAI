@@ -1,4 +1,8 @@
-import { handleExecuteCommand, handleConfigCommand } from "./commandHandler";
+import {
+  handleExecuteCommand,
+  handleConfigCommand,
+  handleFileCommand,
+} from "./commandHandler";
 import { handleSessionCommand } from "./sessionHandeling";
 import { CLIArgs } from "../types/cliArgs";
 import { Primary, ConfigSubCommand } from "../util/constants";
@@ -19,6 +23,11 @@ export async function handlePrimaryCommand(
     case Primary.CONFIG:
       await handleConfigCommand(userArgs.subCommand as ConfigSubCommand);
       process.exit(0);
+
+    case Primary.FILE:
+      await handleFileCommand(userArgs);
+      process.exit(0);
+
     //v2
     case Primary.CHECK:
       process.stderr.write("Comming soon...\n");

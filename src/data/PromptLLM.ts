@@ -73,6 +73,67 @@ Respond ONLY with the \`\`\`json code block containing valid JSON. No commentary
     : basePrompt;
 }
 
+export function filePrompt(fileContent: string, userPrompt?: string): string {
+  const validationSchema = `// VALIDATION RULES - STRICTLY ENFORCED
+1. JSON response MUST be wrapped in \`\`\`json code block and EXACTLY match this structure:
+\`\`\`json
+{
+  "file_type": "string (detected file type, e.g., 'JavaScript', 'YAML', 'CSV')",
+  "summary": "string (50-200 characters, technical overview of file content)",
+  "issues": ["string (specific issues found)", "...", "..."],
+  "recommendations": ["string (concrete improvement steps)", "...", "..."],
+  "security_analysis": "string (200-500 characters, security implications and risks)"
+}
+\`\`\`
+
+2. STRICT PROHIBITIONS:
+- No markdown except required code fences
+- No code comments in JSON
+- No placeholders
+- No trailing commas
+- No ambiguous suggestions
+- No direct code execution suggestions`;
+
+  const basePrompt = `You are a mission-critical file analysis engine. Analyze and respond EXCLUSIVELY with a JSON object wrapped in \`\`\`json code block following these rules:
+
+${validationSchema}
+
+Analysis Context:
+\`\`\`
+- FILE SIZE: ${fileContent.length} bytes
+- ENCODING: UTF-8
+- CWD: ${process.cwd()}
+- USER: ${process.env.USER}
+- OS: ${process.platform}
+- TIMESTAMP: ${new Date().toISOString()}
+\`\`\`
+
+Analysis Protocol:
+1. File type detection: Identify file format and syntax
+2. Content validation: Check for syntax errors, inconsistencies, and anti-patterns
+3. Security audit: Identify potential vulnerabilities and risks
+4. Optimization check: Suggest improvements for readability, performance, and maintainability
+5. Compliance check: Verify adherence to common standards and best practices
+
+Response Requirements:
+- Start response with \`\`\`json and end with \`\`\`
+- Array lengths: issues[3], recommendations[3]
+- String lengths enforced per field (see schema)
+- UTC timestamp: ${new Date().toISOString()}
+
+Failure Consequences:
+Invalid responses will cause:
+1. Automated validation failure
+2. Security lockdown
+3. Incident reporting
+
+Respond ONLY with the \`\`\`json code block containing valid JSON. No commentary before/after.`;
+
+  return userPrompt
+    ? `${basePrompt}\n\nUser Context:\n${userPrompt}\n\nADAPTATION RULES:\n- Maintain JSON code block structure\n- Preserve schema format\n- Keep timestamps\n- Sanitize user input`
+    : basePrompt;
+}
+
 // Helper function to detect shell environment
 function detectShellEnvironment(error: string): string {
   const patterns = {

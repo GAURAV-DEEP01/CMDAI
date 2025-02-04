@@ -1,14 +1,27 @@
 import clc from "cli-color";
-
 import { runCommand } from "../util/commandHistory";
+import {
+  CommandAnalysis,
+  FileAnalysis,
+  ResponseType,
+} from "../types/responseAnalysis";
 
-export async function handleResponse(response: {
-  description: string;
-  possible_fixes: string[];
-  corrected_command: string;
-  explanation?: string;
-}) {
-  process.stdout.write(clc.bold.underline("Validation Results\n"));
+export async function handleResponse(response: ResponseType) {
+  if (isCommandAnalysis(response)) {
+    await handleCommandResponse(response);
+  } else {
+    handleFileResponse(response);
+  }
+}
+
+function isCommandAnalysis(
+  response: ResponseType
+): response is CommandAnalysis {
+  return (response as CommandAnalysis).corrected_command !== undefined;
+}
+
+async function handleCommandResponse(response: CommandAnalysis) {
+  process.stdout.write(clc.bold.underline("Command Validation Results\n"));
   process.stdout.write(
     clc.blue.bold("Description:") + ` ${response.description}\n`
   );
@@ -19,9 +32,9 @@ export async function handleResponse(response: {
     );
   }
 
-  process.stdout.write(clc.blue.bold("Possible Fixes:"));
+  process.stdout.write(clc.blue.bold("Possible Fixes:\n"));
   response.possible_fixes.forEach((fix, index) => {
-    process.stdout.write(`  ${index + 1}. ${fix}`);
+    process.stdout.write(`  ${index + 1}. ${fix}\n`);
   });
 
   process.stdout.write(
@@ -39,4 +52,26 @@ export async function handleResponse(response: {
   } catch (e) {
     console.error(e);
   }
+}
+
+function handleFileResponse(response: FileAnalysis) {
+  process.stdout.write(clc.bold.underline("File Analysis Results\n"));
+  process.stdout.write(
+    clc.blue.bold("File Type:") + ` ${response.file_type}\n`
+  );
+  process.stdout.write(clc.blue.bold("Summary:") + ` ${response.summary}\n`);
+
+  process.stdout.write(clc.blue.bold("\nIssues Found:\n"));
+  response.issues.forEach((issue, index) => {
+    process.stdout.write(`  ${index + 1}. ${issue}\n`);
+  });
+
+  process.stdout.write(clc.blue.bold("\nRecommendations:\n"));
+  response.recommendations.forEach((recommendation, index) => {
+    process.stdout.write(`  ${index + 1}. ${recommendation}\n`);
+  });
+
+  process.stdout.write(
+    clc.blue.bold("\nSecurity Analysis:") + ` ${response.security_analysis}\n`
+  );
 }

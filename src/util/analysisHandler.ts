@@ -1,28 +1,56 @@
-import { defaultPrompt } from "../data/defaultPrompt";
+import { defaultPrompt, filePrompt } from "../data/PromptLLM";
 import { handleResponse } from "../components/handleResponse";
 import queryLLM from "../components/queryLLM";
+import inquirer from "inquirer";
+import { clearStdLine } from "./tools";
+import { CLIArgs } from "../types/cliArgs";
 
 export async function analyzeCommandExecution(params: {
-  command: string;
-  output: string;
-  error: string;
-  model: string;
-  customPrompt?: string;
-  verbose?: boolean;
+  command?: string;
+  output?: string;
+  error?: string;
+  userArgs: CLIArgs;
+  fileContent?: string;
 }) {
-  const input = params.customPrompt
-    ? defaultPrompt(
-        params.command,
-        params.output,
-        params.error,
-        params.customPrompt
-      )
-    : defaultPrompt(params.command, params.output, params.error);
+  const { userArgs, fileContent } = params;
+
+  const answer = await inquirer.prompt([
+    {
+      type: "confirm",
+      name: "analyze",
+      message: `Run analysis with ${userArgs.model}?`,
+      default: true,
+    },
+  ]);
+  clearStdLine();
+
+  if (!answer.analyze) process.exit(0);
+
+  let input: string;
+  if (fileContent) {
+    input = userArgs.prompt
+      ? filePrompt(fileContent, userArgs.prompt)
+      : filePrompt(fileContent);
+  } else {
+    input = userArgs.prompt
+      ? defaultPrompt(
+          params.command!,
+          params.output || "",
+          params.error || "",
+          userArgs.prompt
+        )
+      : defaultPrompt(params.command!, params.output || "", params.error || "");
+  }
 
   try {
-    const response = await queryLLM(params.model, input, params.verbose, 0);
+    const response = await queryLLM(
+      userArgs.model!,
+      input,
+      userArgs.verbose,
+      !!fileContent,
+      0
+    );
 
-    // Handle the LLM response
     await handleResponse(response);
   } catch (error) {
     console.error(

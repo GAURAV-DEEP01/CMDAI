@@ -1,4 +1,3 @@
-import inquirer from "inquirer";
 import clc from "cli-color";
 import { getLastCommand, runCommand } from "../util/commandHistory";
 import { analyzeCommandExecution } from "../util/analysisHandler";
@@ -6,7 +5,8 @@ import { CommandExecutionError } from "../types/errors";
 import { CLIArgs } from "../types/cliArgs";
 import { ConfigSubCommand } from "../util/constants";
 import { runSetup } from "../util/configHandler";
-import { clearStdLine, readConfig } from "../util/tools";
+import fs from "fs/promises";
+import { readConfig } from "../util/tools";
 
 export async function handleExecuteCommand(userArgs: CLIArgs) {
   try {
@@ -33,31 +33,12 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
     if (output) process.stdout.write(`${output}`);
     if (error) process.stderr.write(`${error}`);
 
-    try {
-      // Determine if analysis should proceed
-      const answer = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "analyze",
-          message: `Run analysis with ${userArgs.model}?`,
-          default: true,
-        },
-      ]);
-      clearStdLine();
-
-      if (answer.analyze) {
-        await analyzeCommandExecution({
-          command: commandStr,
-          output,
-          error,
-          model: userArgs.model as string,
-          customPrompt: userArgs.prompt,
-          verbose: userArgs.verbose,
-        });
-      }
-    } catch (error) {
-      process.exit(1);
-    }
+    await analyzeCommandExecution({
+      command: commandStr,
+      output,
+      error,
+      userArgs,
+    });
   } catch (error) {
     if (error instanceof CommandExecutionError) {
       process.stderr.write(`\nCommand failed: ${error.message}\n`);
@@ -66,6 +47,39 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
 
     process.stderr.write(
       `\nError: ${error instanceof Error ? error.message : "Unknown error"}\n`
+    );
+    process.exit(1);
+  }
+}
+
+export async function handleFileCommand(userArgs: CLIArgs) {
+  try {
+    const filePath = userArgs.filePath;
+    if (!filePath) {
+      throw new Error("No file path provided");
+    }
+
+    // Check if file exists using relative path
+    try {
+      await fs.access(filePath);
+    } catch (error) {
+      throw new Error(`File not found: ${filePath}`);
+    }
+
+    // Read file content
+    const content = await fs.readFile(filePath, "utf-8");
+    if (content.length === 0) throw new Error("File is empty");
+
+    // Call analysis with file content
+    await analyzeCommandExecution({
+      fileContent: content,
+      userArgs: userArgs,
+    });
+  } catch (error) {
+    process.stderr.write(
+      `\nFile Error: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }\n`
     );
     process.exit(1);
   }

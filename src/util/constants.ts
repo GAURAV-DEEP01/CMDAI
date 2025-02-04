@@ -4,7 +4,8 @@ export enum Primary {
   CHECK = "check",
   VERSION = "version",
   HELP = "help",
-  CONFIG = "config", // Added new primary command
+  FILE = "file",
+  CONFIG = "config",
 }
 
 export enum SessionSubCommand {
@@ -13,7 +14,7 @@ export enum SessionSubCommand {
   STATUS = "status",
 }
 
-export enum ConfigSubCommand { // Added new config subcommands
+export enum ConfigSubCommand {
   GET = "get",
   SET = "set",
 }
@@ -25,6 +26,7 @@ export enum Flag {
   COMMAND = "--command",
   PROMPT = "--prompt",
   MODEL = "--model",
+  FILE = "--file",
 }
 
 export enum ShortFlag {
@@ -34,4 +36,5 @@ export enum ShortFlag {
   COMMAND = "-c",
   PROMPT = "-p",
   MODEL = "-m",
+  FILE = "-f",
 }

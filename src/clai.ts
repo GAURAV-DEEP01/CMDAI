@@ -6,12 +6,11 @@ import { initializeConfig } from "./util/configHandler";
 import { checkLLM } from "./util/checkLLM";
 import { handlePrimaryCommand } from "./components/handlePrimaryCommand";
 
+// to do ranalyze the user doesn't want to run the command
 async function main() {
   try {
     let userArgs: CLIArgs = parseCLIArgs();
 
-    // didnt use default modele for info because it was causing the program to start config setup 
-    // when the user just wanted to see the clai --help or clai --version
     if (showInfo(userArgs))
       process.exit(0);
 

@@ -21,6 +21,8 @@ import { ArgumentError } from "../types/errors";
 // clai --prompt="<prompt>" --verbose
 // clai --command="<command>" --prompt="<prompt>"
 // clai --command="<command>" --prompt="<prompt>" --verbose
+// clai --file="<file>"
+// clai --file="<file>" --prompt="<question>"
 
 // v2
 // clai session start
@@ -28,8 +30,6 @@ import { ArgumentError } from "../types/errors";
 // clai session end
 // clai session status
 // clai --ask="<question>"
-// clai --file="<file>"
-// clai --file="<file>" --prompt="<question>"
 
 // Command structure definition for easy extension
 const commandStructure: any = {
@@ -45,6 +45,9 @@ const commandStructure: any = {
   [Primary.EXECUTE]: {
     flags: [Flag.COMMAND, Flag.PROMPT, Flag.MODEL, Flag.VERBOSE],
   },
+  [Primary.FILE]: {
+    flags: [Flag.FILE, Flag.PROMPT],
+  },
 };
 
 export function parseCLIArgs(): CLIArgs {
@@ -56,6 +59,12 @@ export function parseCLIArgs(): CLIArgs {
     }
 
     const primary = findPrimaryCommand(args);
+    if (primary === Primary.HELP) {
+      return { primary: Primary.HELP, help: true };
+    }
+    if (primary === Primary.VERSION) {
+      return { primary: Primary.VERSION, version: true };
+    }
     const specialResult = handleSpecialCases(primary, args);
     if (specialResult) return specialResult;
 
@@ -125,19 +134,19 @@ function parseFlags(args: string[], primary: Primary): Partial<CLIArgs> {
       case Flag.PROMPT:
       case Flag.COMMAND:
       case Flag.MODEL:
+      case Flag.FILE:
         if (!value)
           throw new ArgumentError(
             `Flag ${flag} requires a value`,
             "MISSING_VALUE"
           );
         result[flag.substring(2).toLowerCase() as keyof CLIArgs] = value as any;
-        break;
+        break
       case Flag.VERBOSE:
         result.verbose = true;
         break;
     }
   }
-
   return result;
 }
 
@@ -161,6 +170,7 @@ function findPrimaryCommand(args: string[]): Primary {
     check: Primary.CHECK,
     config: Primary.CONFIG,
     prompt: Primary.EXECUTE,
+    file: Primary.FILE,
   };
 
   const cmd = args.find((arg) => commandMap[arg]);
@@ -175,6 +185,7 @@ function getLongFlag(shortFlag: string): string | undefined {
     [ShortFlag.COMMAND]: Flag.COMMAND,
     [ShortFlag.PROMPT]: Flag.PROMPT,
     [ShortFlag.MODEL]: Flag.MODEL,
+    [ShortFlag.FILE]: Flag.FILE,
   };
 
   return shortFlagMap[shortFlag];
@@ -200,7 +211,6 @@ function normalizeArgs(args: string[]): string[] {
     } else {
       handleRegularArgument(arg, normalized);
     }
-
     i++;
   }
 
@@ -360,6 +370,15 @@ function parseRegularCommand(args: string[], primary: Primary): CLIArgs {
       case Flag.HELP:
         result.help = true;
         break;
+      case Flag.FILE:
+        result.filePath = value;
+        result.primary = Primary.FILE;
+        if (!value)
+          throw new ArgumentError(
+            "File flag requires a value",
+            "INVALID_COMMAND"
+          );
+        break;
       default:
         throw new ArgumentError(`Unknown flag: ${flag}`, "UNKNOWN_FLAG");
     }
@@ -380,6 +399,15 @@ function validateCommandCombinations(args: Partial<CLIArgs>): void {
         `${args.help ? "Help" : "Version"
         } flag cannot be combined with other flags`,
         "INVALID_FLAG_COMBINATION"
+      );
+    }
+  }
+
+  if (args.primary === Primary.FILE) {
+    if (args.commandStr) {
+      throw new ArgumentError(
+        "File flag cannot be combined with command flag",
+        "INVALID_COMMAND"
       );
     }
   }

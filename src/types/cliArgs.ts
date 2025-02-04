@@ -13,4 +13,5 @@ export interface CLIArgs {
   version?: boolean;
   help?: boolean;
   commandStr?: string;
+  filePath?: string;
 }

@@ -16,7 +16,7 @@ async function pingEndpoint(urlString: string): Promise<boolean> {
   }
 }
 
-export async function checkLLM(config: Config) {
+export async function checkLLM(config: Config, model: string) {
   let baseUrl = config.baseUrl;
 
   // Check if Ollama is installed
@@ -37,11 +37,11 @@ export async function checkLLM(config: Config) {
   if (!baseUrl) {
     process.stderr.write("No baseUrl configured\n");
     config = await initializeConfig();
-    return await checkLLM(config);
+    return await checkLLM(config, model);
   }
 
   // Default URL for Ollama
-  if (config.provider === "ollama" || !baseUrl) {
+  if (config.provider === "ollama") {
     baseUrl = "http://localhost:11434";
   }
 
@@ -51,8 +51,24 @@ export async function checkLLM(config: Config) {
     process.stderr.write(`Error: Unable to connect to LLM at ${baseUrl}\n`);
     process.stderr.write("Please check if the service is running\n");
     process.stderr.write(
-      `Example: ${clc.bold("ollama run ")}${clc.green("<model_name>")}\n`
+      `Example: ${clc.bold("ollama run ")}${clc.green(model)}\n`
     );
     process.exit(0);
+  }
+
+  if (config.provider === "ollama") {
+    try {
+      execSync(`ollama list | grep ${model}`, {
+        stdio: "ignore",
+      });
+    } catch (error) {
+      process.stderr.write(
+        `The model "${model}" is not downloaded. Please download it to proceed.\n`
+      );
+      process.stderr.write(
+        `Run: ${clc.bold("ollama pull ")}${clc.green(model)}\n`
+      );
+      process.exit(1);
+    }
   }
 }

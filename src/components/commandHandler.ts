@@ -77,7 +77,8 @@ export async function handleFileCommand(userArgs: CLIArgs) {
     });
   } catch (error) {
     process.stderr.write(
-      `\nFile Error: ${error instanceof Error ? error.message : "Unknown error"
+      `\nFile Error: ${
+        error instanceof Error ? error.message : "Unknown error"
       }\n`
     );
     process.exit(1);

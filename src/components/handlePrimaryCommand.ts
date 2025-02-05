@@ -9,12 +9,7 @@ import { Primary, ConfigSubCommand } from "../util/constants";
 
 export async function handlePrimaryCommand(
   userArgs: CLIArgs,
-  DEFAULT_MODEL: string
 ) {
-  if (!userArgs.model) {
-    userArgs.model = DEFAULT_MODEL;
-  }
-
   switch (userArgs.primary) {
     case Primary.EXECUTE:
       await handleExecuteCommand(userArgs);

@@ -2,15 +2,16 @@ import { initializeConfig } from "./configHandler";
 import { Config } from "../types/config";
 import { execSync } from "child_process";
 import clc from "cli-color";
+import axios from "axios";
 
 // to do use ai api from vercel
 async function pingEndpoint(urlString: string): Promise<boolean> {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
-    const response = await fetch(urlString, { signal: controller.signal });
+    const response = await axios.get(urlString, { signal: controller.signal });
     clearTimeout(timeoutId);
-    return response.ok;
+    return response.status >= 200 && response.status < 300;
   } catch (error) {
     return false;
   }

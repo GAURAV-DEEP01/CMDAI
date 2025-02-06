@@ -72,6 +72,7 @@ export async function handleFileCommand(userArgs: CLIArgs) {
 
     // Call analysis with file content
     await analyzeCommandExecution({
+      filePath,
       fileContent: content,
       userArgs: userArgs,
     });

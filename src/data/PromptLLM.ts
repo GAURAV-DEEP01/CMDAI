@@ -50,7 +50,7 @@ export function defaultPrompt(
 \`\`\`json
 {
   "description": "string (50-200 characters, technical details)",
-  "possible_fixes": ["string (concrete steps)", "...", "..."],
+  "possible_fixes": ["string (concrete steps)", "string", "string"],
   "corrected_command": "string (directly executable verification-ready command)",
   "explanation": "string (200-500 characters, cause-and-effect analysis)"
 }
@@ -87,15 +87,19 @@ export function defaultPrompt(
   );
 }
 
-export function filePrompt(fileContent: string, userPrompt?: string): string {
+export function filePrompt(
+  fileContent: string,
+  filePath: string,
+  userPrompt?: string
+): string {
   const validationSchema = `// VALIDATION RULES - STRICTLY ENFORCED
 1. JSON response MUST be wrapped in \`\`\`json code block and EXACTLY match this structure:
 \`\`\`json
 {
-  "file_type": "TypeScript" | "JavaScript" | "sh" | "C" | "C++" | "Other",
+  "file_type": "string (derive from the file path = ${filePath} )",
   "summary": "string (50-200 characters, technical overview of file content)",
-  "issues": ["string (specific issues found)", "...", "..."],
-  "recommendations": ["string (concrete improvement steps)", "...", "..."],
+  "issues": ["string (specific issues or improvements found)", "string", "string"],
+  "recommendations": ["string (concrete improvement steps)", "string", "string"],
   "security_analysis": "string (200-500 characters, security implications and risks)"
 }
 \`\`\`
@@ -110,6 +114,7 @@ export function filePrompt(fileContent: string, userPrompt?: string): string {
   const analysisContext = `Analysis Context:
 \`\`\`
 - FILE CONTENT: ${fileContent}
+- FILE PATH: ${filePath}
 - ENCODING: UTF-8
 - OS: ${process.platform}
 - UTC TIMESTAMP: ${new Date().toISOString()}

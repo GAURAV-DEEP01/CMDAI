@@ -6,7 +6,6 @@ import { initializeConfig } from "./util/configHandler";
 import { checkLLM } from "./util/checkLLM";
 import { handlePrimaryCommand } from "./components/handlePrimaryCommand";
 
-// somethin
 async function main() {
   try {
     let userArgs: CLIArgs = parseCLIArgs();
@@ -28,7 +27,11 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error("Critical error during execution:", err);
-  process.exit(1);
-});
+(async () => {
+  try {
+    await main();
+  } catch (err) {
+    console.error("Critical error during execution:", err);
+    process.exit(1);
+  }
+})();

@@ -4,9 +4,8 @@ import { analyzeCommandExecution } from "../util/analysisHandler";
 import { CommandExecutionError } from "../types/errors";
 import { CLIArgs } from "../types/cliArgs";
 import { ConfigSubCommand } from "../util/constants";
-import { runSetup } from "../util/configHandler";
+import { runSetup, readConfig } from "../util/configHandler";
 import fs from "fs/promises";
-import { readConfig } from "../util/tools";
 
 export async function handleExecuteCommand(userArgs: CLIArgs) {
   try {
@@ -41,12 +40,12 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
     });
   } catch (error) {
     if (error instanceof CommandExecutionError) {
-      process.stderr.write(`\nCommand failed: ${error.message}\n`);
+      process.stderr.write(`\n${clc.red("Command failed:")} ${error.message}\n`);
       process.exit(error.exitCode);
     }
 
     process.stderr.write(
-      `\nError: ${error instanceof Error ? error.message : "Unknown error"}\n`
+      `\n${clc.red("Error:")} ${error instanceof Error ? error.message : "Unknown error"}\n`
     );
     process.exit(1);
   }
@@ -78,7 +77,7 @@ export async function handleFileCommand(userArgs: CLIArgs) {
     });
   } catch (error) {
     process.stderr.write(
-      `\nFile Error: ${error instanceof Error ? error.message : "Unknown error"
+      `\n${clc.red("File Error:")} ${error instanceof Error ? error.message : "Unknown error"
       }\n`
     );
     process.exit(1);
@@ -93,7 +92,7 @@ export async function handleConfigCommand(subCommand: ConfigSubCommand) {
   } else if (subCommand === ConfigSubCommand.SET) {
     await runSetup();
   } else {
-    process.stderr.write("Invalid Config command");
+    process.stderr.write(`${clc.red("Error:")} Invalid Config command`);
   }
   process.exit(1);
 }

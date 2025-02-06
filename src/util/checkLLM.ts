@@ -8,11 +8,10 @@ export async function checkLLM(userArg: CLIArgs) {
     process.stderr.write(`${clc.red("Error:")} The specified model can only be used with a local LLM provider.\n`);
     process.exit(1);
   }
-
   const model = userArg.model || config.model;
 
   if (!model) {
-    process.stderr.write("Model is not defined\n");
+    process.stderr.write(`${clc.red("Error:")} Model is not defined\n`);
     process.exit(1);
   }
 
@@ -22,7 +21,7 @@ export async function checkLLM(userArg: CLIArgs) {
       execSync("which ollama", { stdio: "ignore" });
     } catch (error) {
       process.stderr.write(
-        `Ollama is not installed.Please install it to proceed.\nVisit ${clc.blue.underline(
+        `${clc.red("Error")} Ollama is not installed.Please install it to proceed.\nVisit ${clc.blue.underline(
           "https://ollama.com/download"
         )
         }\n`

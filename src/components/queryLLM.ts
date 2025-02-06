@@ -145,7 +145,7 @@ export default async function queryLLM(
     }
     process.stderr.write(
       clc.red(
-        `Error: AI response validation failed after ${MAX_RETRIES} tries\n`
+        `${clc.red("Error:")}AI response validation failed after ${MAX_RETRIES} tries\n`
       )
     );
     process.exit(1);

@@ -3,7 +3,7 @@ import { SessionSubCommand } from "../util/constants";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { readConfig } from "../util/tools";
+import { readConfig } from "../util/configHandler";
 
 // Constants for consistent messaging
 const CONFIG_DIR = path.join(os.homedir(), "/.clai");
@@ -40,8 +40,7 @@ export function handleSessionCommand(userArgs: CLIArgs) {
     }
   } catch (error) {
     console.error(
-      `${STATUS_ICONS.ERROR} ${
-        error instanceof Error ? error.message : "Unknown error"
+      `${STATUS_ICONS.ERROR} ${error instanceof Error ? error.message : "Unknown error"
       }`
     );
     process.exit(1);

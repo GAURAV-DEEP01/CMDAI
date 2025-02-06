@@ -2,10 +2,9 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import inquirer from "inquirer";
+import dotenv from 'dotenv';
 import axios from "axios";
-import { readConfig } from "./tools";
 import { Config } from "../types/config";
-
 const homeDir = os.homedir();
 const CONFIG_DIR = path.join(homeDir, ".clai");
 const CONFIG_PATH = path.join(CONFIG_DIR, "config.json");
@@ -109,26 +108,70 @@ export async function runSetup() {
     process.exit(1);
   }
 
+  // ... existing code ...
+
   const config: Config = {
-    provider: answers.providerType,
+    provider: answers.apiProvider || "ollama",
     model:
-      // todo check this
       answers.providerType === "ollama"
         ? answers.ollamaModel
         : answers.apiModel,
     session: false,
   };
-  // v2
+
   if (answers.providerType !== "ollama") {
-    // Store API key in .env file
-    const envContent = `API_KEY=${answers.apiKey}`;
+    // Determine the environment variable name for the provider
+    let envVarName;
+    switch (answers.apiProvider) {
+      case "google":
+        envVarName = "GOOGLE_API_KEY";
+        break;
+      case "openai":
+        envVarName = "OPENAI_API_KEY";
+        break;
+      default:
+        envVarName = "DEEPSEEK_API_KEY";
+    }
+
+    // Read existing .env file or start with an empty object
+    let envVars = {} as any;
+    if (fs.existsSync(ENV_PATH)) {
+      const existingContent = fs.readFileSync(ENV_PATH, 'utf8');
+      envVars = dotenv.parse(existingContent);
+    }
+
+    // Update the API key for the current provider
+    envVars[envVarName] = answers.apiKey;
+
+    // Convert the object back to .env format string
+    const newEnvContent = Object.entries(envVars)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\n');
+
+    // Ensure the config directory exists
     if (!fs.existsSync(CONFIG_DIR)) {
       fs.mkdirSync(CONFIG_DIR, { recursive: true });
     }
-    fs.writeFileSync(ENV_PATH, envContent);
+
+    // Write the updated content to .env file
+    fs.writeFileSync(ENV_PATH, newEnvContent);
   }
 
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
   process.stdout.write(`\n✅ Configuration saved to ${CONFIG_PATH}\n`);
 }
 
+export function readConfig(): Config {
+  const configPath = path.join(os.homedir(), ".clai", "config.json");
+  try {
+    const data = fs.readFileSync(configPath, "utf-8");
+    return JSON.parse(data);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Error reading config file:", error.message);
+    } else {
+      console.error("Error reading config file:", error);
+    }
+    process.exit(0);
+  }
+}

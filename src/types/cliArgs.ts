@@ -12,6 +12,7 @@ export interface CLIArgs {
   verbose?: boolean;
   version?: boolean;
   help?: boolean;
+  askString?: string;
   commandStr?: string;
   filePath?: string;
 }

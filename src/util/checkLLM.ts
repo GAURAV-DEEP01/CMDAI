@@ -1,24 +1,20 @@
-import { initializeConfig } from "./configHandler";
-import { Config } from "../types/config";
 import { execSync } from "child_process";
 import clc from "cli-color";
-import axios from "axios";
+import { CLIArgs } from "../types/cliArgs";
+import { config } from "../clai";
 
-// to do use ai api from vercel
-async function pingEndpoint(urlString: string): Promise<boolean> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    const response = await axios.get(urlString, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    return response.status >= 200 && response.status < 300;
-  } catch (error) {
-    return false;
+export async function checkLLM(userArg: CLIArgs) {
+  if (config.provider != "ollama" && userArg.model) {
+    process.stderr.write(`${clc.red("Error:")} The specified model can only be used with a local LLM provider.\n`);
+    process.exit(1);
   }
-}
 
-export async function checkLLM(config: Config, model: string) {
-  let baseUrl = config.baseUrl;
+  const model = userArg.model || config.model;
+
+  if (!model) {
+    process.stderr.write("Model is not defined\n");
+    process.exit(1);
+  }
 
   // Check if Ollama is installed
   if (config.provider === "ollama") {
@@ -26,35 +22,13 @@ export async function checkLLM(config: Config, model: string) {
       execSync("which ollama", { stdio: "ignore" });
     } catch (error) {
       process.stderr.write(
-        `Ollama is not installed. Please install it to proceed.\nVisit ${clc.blue.underline(
+        `Ollama is not installed.Please install it to proceed.\nVisit ${clc.blue.underline(
           "https://ollama.com/download"
-        )}\n`
+        )
+        }\n`
       );
       process.exit(1);
     }
-  }
-
-  // If baseUrl is not configured, initialize it
-  if (!baseUrl) {
-    process.stderr.write("No baseUrl configured\n");
-    config = await initializeConfig();
-    return ;
-  }
-
-  // Default URL for Ollama
-  if (config.provider === "ollama") {
-    baseUrl = "http://localhost:11434";
-  }
-
-  // Ping the endpoint
-  const isAlive = await pingEndpoint(baseUrl);
-  if (!isAlive) {
-    process.stderr.write(`Error: Unable to connect to LLM at ${baseUrl}\n`);
-    process.stderr.write("Please check if the service is running\n");
-    process.stderr.write(
-      `Example: ${clc.bold("ollama run ")}${clc.green(model)}\n`
-    );
-    process.exit(0);
   }
 
   if (config.provider === "ollama") {
@@ -64,7 +38,7 @@ export async function checkLLM(config: Config, model: string) {
       });
     } catch (error) {
       process.stderr.write(
-        `The model "${model}" is not downloaded. Please download it to proceed.\n`
+        `The model "${model}" is not downloaded.Please download it to proceed.\n`
       );
       process.stderr.write(
         `Run: ${clc.bold("ollama pull ")}${clc.green(model)}\n`

@@ -35,7 +35,7 @@ const API_PROVIDERS = {
   deepseek: ["deepseek-chat", "deepseek-coder", "deepseek-math"],
 };
 
-async function initializeConfig() {
+export async function initializeConfig() {
   if (!fs.existsSync(CONFIG_PATH)) {
     process.stdout.write("No configuration found. Running setup...\n");
     await runSetup();
@@ -132,4 +132,3 @@ export async function runSetup() {
   process.stdout.write(`\n✅ Configuration saved to ${CONFIG_PATH}\n`);
 }
 
-export { initializeConfig };

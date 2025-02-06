@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 import { showInfo } from "./components/info";
-import { parseCLIArgs } from "./components/argParser";
+import { parseCLIArgs } from "./components/parseCLIArgs";
 import { CLIArgs } from "./types/cliArgs";
 import { initializeConfig } from "./util/configHandler";
 import { checkLLM } from "./util/checkLLM";
 import { handlePrimaryCommand } from "./components/handlePrimaryCommand";
 import { Config } from "./types/config";
 
-export let config: Config | null;
+export let config: Config;
+
 async function main() {
   try {
     let userArgs: CLIArgs = parseCLIArgs();
@@ -15,9 +16,7 @@ async function main() {
     if (showInfo(userArgs)) process.exit(0);
     if (!config) return;
 
-    userArgs.model = userArgs.model || config.model;
-
-    await checkLLM(config, userArgs.model);
+    await checkLLM(userArgs);
 
     await handlePrimaryCommand(userArgs);
   } catch (error) {

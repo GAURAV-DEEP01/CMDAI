@@ -5,14 +5,14 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOllama } from "ollama-ai-provider";
 import { streamText } from "ai";
 import clc from "cli-color";
-import { loadingAnimation } from "../util/tools";
+import { clearStdLine, loadingAnimation } from "../util/tools";
 import { ResponseType } from "../types/responseAnalysis";
 import { validateAndParseResponse } from "../util/responseValidation";
 import { CLIArgs } from "../types/cliArgs";
 import { config } from "../clai";
 import dotenv from "dotenv";
-dotenv.config({ path: "/Users/nischalshetty/.clai/.env" });
-
+import os from "os";
+dotenv.config({ path: `${os.homedir()}/.clai/.env` });
 const MAX_RETRIES = 3;
 
 export default async function queryLLM(
@@ -20,8 +20,11 @@ export default async function queryLLM(
   input: string,
   retryCount: number = 0
 ): Promise<ResponseType> {
-  const { model, verbose, filePath } = userArgs;
-  if (!config || !model) process.exit(1);
+  const { verbose, filePath } = userArgs;
+
+  if (!config) process.exit(1);
+
+  const model = userArgs.model || config.model;
 
   const { provider } = config;
   const isFile = !!filePath;
@@ -33,23 +36,22 @@ export default async function queryLLM(
       );
     }
 
-    const VALIDATION_SCHEMA = `// JSON Validation Requirements ${
-      isFile
-        ? `{
+    const VALIDATION_SCHEMA = `// JSON Validation Requirements ${isFile
+      ? `{
       "file_type": "string (type of the file being analyzed)",
       "summary": "string (brief summary of the file)",
       "issues": ["string", "...", "..."],
       "recommendations": ["string", "...", "..."],
       "security_analysis": "string (detailed security analysis)"
     }`
-        : `
+      : `
     {
       "description": "string (technical explanation)",
       "possible_fixes": ["string", "...", "..."],
       "corrected_command": "string (directly executable)",
       "explanation": "string? (detailed analysis)",
     }`
-    }`;
+      }`;
 
     let interval: NodeJS.Timeout | null = null;
     let i = 0;
@@ -58,11 +60,11 @@ export default async function queryLLM(
     // Connection animation
     connecting = setInterval(() => {
       process.stdout.write(
-        `\rConnecting to model ${
-          loadingAnimation[i++ % loadingAnimation.length]
+        `\rConnecting to model ${loadingAnimation[i++ % loadingAnimation.length]
         }`
       );
     }, 50);
+
     // Route to appropriate provider
     let aiOutput = "";
     const fullPrompt =
@@ -75,22 +77,22 @@ export default async function queryLLM(
     switch (provider) {
       case "google":
         responseStream = (
-          await queryGemini(model, fullPrompt, process.env.GOOGLE_API_KEY!)
+          queryGemini(model, fullPrompt, process.env.GOOGLE_API_KEY!)
         ).textStream;
         break;
       case "openai":
         responseStream = (
-          await queryOpenai(model, fullPrompt, process.env.OPENAI_API_KEY!)
+          queryOpenai(model, fullPrompt, process.env.OPENAI_API_KEY!)
         ).textStream;
         break;
       case "deepseek":
         responseStream = (
-          await queryDeepseek(model, fullPrompt, process.env.DEEPSEEK_API_KEY!)
+          queryDeepseek(model, fullPrompt, process.env.DEEPSEEK_API_KEY!)
         ).textStream;
         break;
       case "anthropic":
         responseStream = (
-          await queryAnthropic(
+          queryAnthropic(
             model,
             fullPrompt,
             process.env.ANTHROPIC_API_KEY!
@@ -98,25 +100,28 @@ export default async function queryLLM(
         ).textStream;
         break;
       case "ollama":
-        responseStream = (await queryOllama(model, fullPrompt)).textStream;
+        responseStream = (queryOllama(model, fullPrompt)).textStream;
         break;
       default:
         throw new Error(`Unsupported provider: ${provider}`);
     }
-    clearInterval(connecting!);
+
     process.stdout.write(clc.erase.line);
 
-    if (!verbose) {
-      let i = 0;
-      interval = setInterval(() => {
-        process.stdout.write(
-          `\rThinking ${loadingAnimation[i++ % loadingAnimation.length]}`
-        );
-      }, 50);
-    }
-
     try {
+      let isResponded = false;
       for await (const chunk of responseStream) {
+        if (!verbose && !isResponded) {
+          clearInterval(connecting);
+          clearStdLine();
+          isResponded = true;
+          let i = 0;
+          interval = setInterval(() => {
+            process.stdout.write(
+              `\rThinking ${loadingAnimation[i++ % loadingAnimation.length]}`
+            );
+          }, 50);
+        }
         aiOutput += chunk;
         if (verbose) {
           process.stdout.write(chunk);
@@ -148,7 +153,7 @@ export default async function queryLLM(
 }
 
 // Update provider functions to use streamText
-async function queryGemini(model: string, input: string, apiKey: string) {
+function queryGemini(model: string, input: string, apiKey: string) {
   const google = createGoogleGenerativeAI({
     apiKey,
   });
@@ -158,7 +163,7 @@ async function queryGemini(model: string, input: string, apiKey: string) {
   });
 }
 
-async function queryOpenai(model: string, input: string, apiKey: string) {
+function queryOpenai(model: string, input: string, apiKey: string) {
   const openai = createOpenAI({
     apiKey,
   });
@@ -168,7 +173,7 @@ async function queryOpenai(model: string, input: string, apiKey: string) {
   });
 }
 
-async function queryDeepseek(model: string, input: string, apiKey: string) {
+function queryDeepseek(model: string, input: string, apiKey: string) {
   const deepseek = createDeepSeek({
     apiKey,
   });
@@ -178,7 +183,7 @@ async function queryDeepseek(model: string, input: string, apiKey: string) {
   });
 }
 
-async function queryAnthropic(model: string, input: string, apiKey: string) {
+function queryAnthropic(model: string, input: string, apiKey: string) {
   const anthropic = createAnthropic({
     apiKey,
   });
@@ -188,7 +193,7 @@ async function queryAnthropic(model: string, input: string, apiKey: string) {
   });
 }
 
-async function queryOllama(model: string, input: string) {
+function queryOllama(model: string, input: string) {
   const ollama = createOllama();
   return streamText({
     model: ollama(model),

@@ -2,6 +2,43 @@ import * as fs from "fs";
 import * as path from "path";
 import clc from "cli-color";
 
+function showHelp() {
+  process.stdout.write(`
+    ${clc.bold("Usage:")} ${clc.cyan("clai [command] [options]")}
+
+    ${clc.bold("Commands:")}
+    ${clc.green("clai")}              		# Rerun the last command and analyze output.
+    ${clc.green("clai config set")}   		# Update or reset configuration.
+    ${clc.green("clai config get")}   		# Show current configuration.
+
+    ${clc.bold("Options:")}
+    ${clc.yellow("-m, --model <name>")}  		# Specify AI model.
+    ${clc.yellow("-p, --prompt <text>")} 		# Provide a custom prompt.
+    ${clc.yellow("-f, --file <file>")}   		# Specify a file to process.
+    ${clc.yellow("-v, --verbose")}       		# Enable detailed output.
+    ${clc.yellow("-h, --help")}          		# Show help message.
+    ${clc.yellow("-V, --version")}       		# Show version info.
+    ${clc.yellow("-a, --ask <question>")}		# Ask a specific question.
+
+    ${clc.bold("Examples:")}
+    ${clc.blue("clai")}                               		# Rerun last command.
+    ${clc.blue("clai config set")}                    		# Update configuration.
+    ${clc.blue("clai --version")}                     		# Show version info.
+    ${clc.blue("clai --help")}                        		# Show help message.
+    ${clc.blue('clai --command "echo Hello"')}        		# Execute a command.
+    ${clc.blue('clai --prompt "Hello"')}              		# Use a custom prompt for command or file.
+    ${clc.blue('clai --file "example.txt" --verbose')}		# Process a file with verbose output.
+    ${clc.blue('clai --ask "what does echo do?"')}    		# Ask a question.
+
+    ${clc.bold("Short Flags:")}
+    ${clc.blue("clai -V")}                		# Show version info.
+    ${clc.blue("clai -h")}                		# Show help.
+    ${clc.blue("clai -v")}                		# Enable verbose output.
+    ${clc.blue('clai -c "echo Hello"')}   		# Execute a command.
+    ${clc.blue('clai -p "echo Hello"')}   		# Use a custom prompt.
+  `);
+}
+
 export function showInfo(userArgs: any) {
   if (userArgs.help) {
     showHelp();
@@ -15,44 +52,6 @@ export function showInfo(userArgs: any) {
   return false;
 }
 
-function showHelp() {
-  process.stdout.write(`
-    ${clc.bold("Usage:")} ${clc.cyan("clai [command] [options]")}
-    
-    ${clc.bold("Commands:")}
-    ${clc.green(
-      "clai"
-    )}                   Rerun the previous command and analyze output using ollama.
-    ${clc.green("clai config get")}        Show current configuration.
-    ${clc.green("clai config set")}        Update or reset configuration.
-  
-  ${clc.bold("Options:")}
-    ${clc.yellow("--model=<name>")}, ${clc.yellow(
-    "-m=<name>"
-  )}           Specify AI model.
-    ${clc.yellow("--prompt=<text>")}, ${clc.yellow(
-    "-p=<text>"
-  )}          Provide a custom AI prompt.
-    ${clc.yellow("--verbose")}, ${clc.yellow(
-    "-vb"
-  )}                      Enable detailed output.
-    ${clc.yellow("--help")}, ${clc.yellow(
-    "-h"
-  )}                          Show this help message.
-    ${clc.yellow("--version")}, ${clc.yellow(
-    "-v"
-  )}                       Show version information.
-    ${clc.yellow("--file=<file>")},${clc.yellow(
-    "-v"
-  )}                    Specify a file to process.
-  
-  ${clc.bold("Examples:")}
-    ${clc.blue("clai")}                    # Rerun last command.
-    ${clc.blue('clai --model="deepseek-r1:7b" --verbose')}
-    ${clc.blue("clai --prompt=\"echo 'Hello, world!'\"")}\n
-    ${clc.blue('clai --file="example.txt"')}\n`);
-}
-
 function showVersion() {
   const configPath = path.resolve(__dirname, "../../package.json");
   try {
@@ -64,16 +63,7 @@ function showVersion() {
 }
 
 // v2 additional commands:
-// ${clc.blue("clai session start")}
-// ${clc.blue("clai check")}              # Works only in session mode.
-// ${clc.blue("clai session end")}
-// ${clc.blue("clai session status")}
-
-// ${clc.green(
-//   "clai session start"
-// )}     Start a session (stores commands and outputs).
-// ${clc.green("clai session end")}       End the current session.
-// ${clc.green("clai session status")}    Show session status.
-// ${clc.green(
-//   "clai check"
-// )}             Analyze last command (session mode only).
+// ${clc.green("clai session start")}# Start a new session.
+// ${clc.green("clai session end")}  # End the current session.
+// ${clc.green("clai session status")} # Show session status.
+// ${clc.green("clai check")}        # Check the current status.

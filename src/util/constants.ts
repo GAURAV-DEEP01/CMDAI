@@ -1,5 +1,6 @@
 export enum Primary {
   EXECUTE = "execute",
+  ASK = "ask",
   SESSION = "session",
   CHECK = "check",
   VERSION = "version",

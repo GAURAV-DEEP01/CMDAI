@@ -24,6 +24,7 @@
     "cli-color": "^2.0.4",
     "inquirer": "^12.4.1",
     "ollama": "^0.5.12",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "zod": "^3.24.1"
   }
 }

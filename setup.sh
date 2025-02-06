@@ -16,7 +16,6 @@ check_dependency() {
         exit 1
     fi
 }
-
 check_dependency git
 check_dependency npm
 
@@ -80,7 +79,17 @@ main() {
     shell_rc=$(configure_shellrc) || exit 1
     create_clai_dir
     build_project
-    echo "\nCLAI setup completed successfully!"
+    echo "
+
+ ██████╗  ██╗        █████╗    ██╗
+██╔════╝  ██║       ██╔══██╗   ██║
+██║       ██║       ███████║   ██║
+██║       ██║       ██╔══██║   ██║
+╚██████╗  ███████╗  ██║  ██║   ██║
+ ╚═════╝  ╚══════╝  ╚═╝  ╚═╝   ╚═╝
+                           "
+
+echo "\nCLAI setup completed successfully!"
     if [ "$SHELL_NAME" = "bash" ]; then
         echo "You may need to restart your shell or run: source $shell_rc"
     fi

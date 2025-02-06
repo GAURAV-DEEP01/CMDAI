@@ -1,6 +1,6 @@
 import ollama from "ollama";
-
 import clc from "cli-color";
+import { z } from "zod";
 import { loadingAnimation } from "../util/tools";
 import { ResponseType } from "../types/responseAnalysis";
 
@@ -109,87 +109,58 @@ export default async function queryLLM(
   }
 }
 
+const CommandResponseSchema = z
+  .object({
+    description: z.string(),
+    possible_fixes: z.array(z.string()),
+    corrected_command: z
+      .string()
+      .refine((cmd) => isValidCommand(cmd), {
+        message: "Dangerous command detected",
+      })
+      .transform((cmd) => sanitizeCommand(cmd)),
+    explanation: z.string().optional().default(""),
+  })
+  .strict();
+
+const FileResponseSchema = z
+  .object({
+    file_type: z.string(),
+    summary: z.string(),
+    issues: z.array(z.string()),
+    recommendations: z.array(z.string()),
+    security_analysis: z.string(),
+  })
+  .strict();
+
+const ResponseSchema = z.union([CommandResponseSchema, FileResponseSchema]);
+
 //v2 validate and parse using zod
 const validateAndParseResponse = (response: string): ResponseType => {
   try {
     const jsonBlockRegex = /```json\s*([\s\S]*?)\s*```/;
     const match = response.match(jsonBlockRegex);
 
-    if (!match || !match[1]) {
-      throw new Error("No valid JSON code block found");
-    }
+    if (!match?.[1]) throw new Error("No valid JSON code block found");
 
     const jsonString = match[1]
       .trim()
       .replace(/[\u2018\u2019]/g, "'")
       .replace(/[\u201C\u201D]/g, '"')
-      .replace(/^[\x00-\x1F]+/, "") // Remove control characters
-      .replace(/(\r\n|\n|\r)/gm, ""); // Remove newlines
+      .replace(/^[\x00-\x1F]+/, "")
+      .replace(/(\r\n|\n|\r)/gm, "");
 
-    const parsed = JSON.parse(jsonString);
+    const rawData = JSON.parse(jsonString);
+    const result = ResponseSchema.safeParse(rawData);
 
-    // Determine response type based on content
-    if ("corrected_command" in parsed) {
-      // Command Analysis Validation
-      const commandFields = [
-        "description",
-        "possible_fixes",
-        "corrected_command",
-      ];
-      const missingCommandFields = commandFields.filter((f) => !(f in parsed));
-      if (missingCommandFields.length > 0) {
-        throw new Error(
-          `Missing command fields: ${missingCommandFields.join(", ")}`
-        );
-      }
-
-      if (!Array.isArray(parsed.possible_fixes)) {
-        throw new Error("possible_fixes must be an array");
-      }
-
-      if (!isValidCommand(parsed.corrected_command)) {
-        throw new Error(
-          `Dangerous command detected: ${parsed.corrected_command}`
-        );
-      }
-
-      return {
-        description: parsed.description,
-        possible_fixes: parsed.possible_fixes,
-        corrected_command: sanitizeCommand(parsed.corrected_command),
-        explanation: parsed.explanation || "",
-      };
-    } else if ("file_type" in parsed) {
-      // File Analysis Validation
-      const fileFields = [
-        "file_type",
-        "summary",
-        "issues",
-        "recommendations",
-        "security_analysis",
-      ];
-      const missingFileFields = fileFields.filter((f) => !(f in parsed));
-      if (missingFileFields.length > 0) {
-        throw new Error(`Missing file fields: ${missingFileFields.join(", ")}`);
-      }
-
-      if (
-        !Array.isArray(parsed.issues) ||
-        !Array.isArray(parsed.recommendations)
-      ) {
-        throw new Error("Issues and recommendations must be arrays");
-      }
-
-      return {
-        file_type: parsed.file_type,
-        summary: parsed.summary,
-        issues: parsed.issues,
-        recommendations: parsed.recommendations,
-        security_analysis: parsed.security_analysis,
-      };
+    if (!result.success) {
+      const errorMessages = result.error.issues
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join("\n");
+      throw new Error(`Validation failed:\n${errorMessages}`);
     }
 
-    throw new Error("Unknown response format");
+    return result.data;
   } catch (error) {
     throw new Error(
       `Response validation failed: ${
@@ -199,6 +170,7 @@ const validateAndParseResponse = (response: string): ResponseType => {
   }
 };
 
+// Keep the existing helper functions unchanged
 const isValidCommand = (command: string): boolean => {
   const forbiddenPatterns = [
     /rm\s+-rf/,
@@ -212,7 +184,7 @@ const isValidCommand = (command: string): boolean => {
 
 const sanitizeCommand = (command: string): string => {
   return command
-    .replace(/\bsudo\b/g, "") // Remove sudo for safety
-    .replace(/\s{2,}/g, " ") // Collapse multiple spaces
+    .replace(/\bsudo\b/g, "")
+    .replace(/\s{2,}/g, " ")
     .trim();
 };

@@ -1,4 +1,13 @@
-# CLAI - Command Line AI
+<pre align="center">
+   ██████╗  ██╗        █████╗    ██╗
+  ██╔════╝  ██║       ██╔══██╗   ██║
+  ██║       ██║       ███████║   ██║
+  ██║       ██║       ██╔══██║   ██║
+  ╚██████╗  ███████╗  ██║  ██║   ██║
+   ╚═════╝  ╚══════╝  ╚═╝  ╚═╝   ╚═╝
+</pre>
+
+# <p align="center"><strong align="center">Command Line AI</strong></p>
 
 **CLAI** is an innovative command-line tool that leverages AI to analyze shell commands and their outputs. By utilizing Ollama, CLAI can help you troubleshoot errors, suggest fixes, and provide detailed insights into your terminal commands.
 

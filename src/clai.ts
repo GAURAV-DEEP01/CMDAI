@@ -5,14 +5,15 @@ import { CLIArgs } from "./types/cliArgs";
 import { initializeConfig } from "./util/configHandler";
 import { checkLLM } from "./util/checkLLM";
 import { handlePrimaryCommand } from "./components/handlePrimaryCommand";
+import { Config } from "./types/config";
 
+export let config: Config | null;
 async function main() {
   try {
     let userArgs: CLIArgs = parseCLIArgs();
 
     if (showInfo(userArgs)) process.exit(0);
-
-    const config = await initializeConfig();
+    if (!config) return;
 
     userArgs.model = userArgs.model || config.model;
 
@@ -29,6 +30,7 @@ async function main() {
 
 (async () => {
   try {
+    config = await initializeConfig();
     await main();
   } catch (err) {
     console.error("Critical error during execution:", err);

@@ -17,14 +17,22 @@ const DEFAULT_OLLAMA_MODELS = [
   "deepseek-r1:1.5b",
   "deepseek-r1:7b",
   "codellama",
+  "mistral",
+  "gemma",
+  "phi-3",
+  "orca-mini",
 ];
 
 const API_PROVIDERS = {
-  // v2 fix this
-  openai: ["gpt-3.5-turbo", "gpt-4"],
-  anthropic: ["claude-2", "claude-instant"],
-  google: ["t5-3b", "t5-11b"],
-  DeepSeek: ["deepseek-1", "deepseek-2"],
+  openai: ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o", "gpt-4"],
+  anthropic: [
+    "claude-3-opus",
+    "claude-3-sonnet",
+    "claude-3-haiku",
+    "claude-2.1",
+  ],
+  google: ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1-pro", "gemini-1"],
+  deepseek: ["deepseek-chat", "deepseek-coder", "deepseek-math"],
 };
 
 async function initializeConfig() {
@@ -39,14 +47,12 @@ export async function runSetup() {
   let answers;
   try {
     answers = await inquirer.prompt<{
-      providerType: "ollama" | "api";
+      providerType: "ollama" | "google" | "openai" | "anthropic" | "deepseek";
       ollamaModel: string;
       customOllamaModel: string;
       apiProvider: keyof typeof API_PROVIDERS;
       apiModel: string;
       apiKey: string;
-      ollamaBaseUrl: string;
-      apiBaseUrl: string;
     }>([
       {
         type: "list",
@@ -54,27 +60,16 @@ export async function runSetup() {
         message: "Choose your LLM provider:",
         choices: [
           { name: "Local Ollama", value: "ollama" },
-          // v2
-          // { name: "Custom cloud API", value: "api" },
+          { name: "Custom cloud API", value: "api" },
         ],
-      },
-      {
-        type: "input",
-        name: "ollamaBaseUrl",
-        message: "Ollama base URL (default: http://localhost:11434):",
-        default: "http://localhost:11434",
-        when: (answers) => answers.providerType === "ollama",
-        validate: (input) => isValidUrl(input) || "Please enter a valid URL",
       },
       {
         type: "list",
         name: "ollamaModel",
         message: "Select Ollama model:",
-        choices: async (answers) => {
+        choices: async () => {
           try {
-            const response = await axios.get(
-              `${answers.ollamaBaseUrl}/api/tags`
-            );
+            const response = await axios.get(`http://localhost:11434/api/tags`);
             if (!response.data.models) {
               throw new Error("Invalid response from Ollama");
             }
@@ -88,19 +83,18 @@ export async function runSetup() {
         },
         when: (answers) => answers.providerType === "ollama",
       },
-      // v2
       {
         type: "list",
         name: "apiProvider",
         message: "Select API provider:",
         choices: Object.keys(API_PROVIDERS),
-        when: (answers) => answers.providerType === "api",
+        when: (answers) => answers.providerType !== "ollama",
       },
       {
         type: "password",
         name: "apiKey",
         message: "Enter API key:",
-        when: (answers) => answers.providerType === "api",
+        when: (answers) => answers.providerType !== "ollama",
         validate: (input) => !!input.trim(),
       },
       {
@@ -108,29 +102,7 @@ export async function runSetup() {
         name: "apiModel",
         message: "Select model:",
         choices: (answers) => API_PROVIDERS[answers.apiProvider!],
-        when: (answers) => answers.providerType === "api",
-      },
-      {
-        type: "input",
-        name: "apiBaseUrl",
-        message: (answers) => `${answers.apiProvider} base URL:`,
-        default: (answers) => {
-          switch (answers.apiProvider) {
-            case "openai":
-              //v2 check if apis are correct
-              return "https://api.openai.com";
-            case "anthropic":
-              return "https://api.anthropic.com";
-            case "google":
-              return "https://api.google.com";
-            case "DeepSeek":
-              return "https://api.deepseek.com";
-            default:
-              return "http://localhost:11434";
-          }
-        },
-        when: (answers) => answers.providerType === "api",
-        validate: (input) => isValidUrl(input) || "Please enter a valid URL",
+        when: (answers) => answers.providerType !== "ollama",
       },
     ]);
   } catch (error) {
@@ -140,17 +112,14 @@ export async function runSetup() {
   const config: Config = {
     provider: answers.providerType,
     model:
+      // todo check this
       answers.providerType === "ollama"
         ? answers.ollamaModel
         : answers.apiModel,
-    baseUrl:
-      answers.providerType === "ollama"
-        ? answers.ollamaBaseUrl
-        : answers.apiBaseUrl,
     session: false,
   };
   // v2
-  if (answers.providerType === "api") {
+  if (answers.providerType !== "ollama") {
     // Store API key in .env file
     const envContent = `API_KEY=${answers.apiKey}`;
     if (!fs.existsSync(CONFIG_DIR)) {
@@ -161,15 +130,6 @@ export async function runSetup() {
 
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
   process.stdout.write(`\n✅ Configuration saved to ${CONFIG_PATH}\n`);
-}
-
-function isValidUrl(url: string) {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export { initializeConfig };

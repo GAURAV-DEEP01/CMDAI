@@ -38,7 +38,7 @@ export async function checkLLM(config: Config, model: string) {
   if (!baseUrl) {
     process.stderr.write("No baseUrl configured\n");
     config = await initializeConfig();
-    return await checkLLM(config, model);
+    return ;
   }
 
   // Default URL for Ollama

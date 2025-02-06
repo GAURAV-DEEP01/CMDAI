@@ -29,13 +29,7 @@ export async function analyzeCommandExecution(params: {
   }
 
   try {
-    const response = await queryLLM(
-      userArgs.model!,
-      input,
-      userArgs.verbose,
-      !!fileContent,
-      0
-    );
+    const response = await queryLLM(userArgs, input, 0);
 
     await handleResponse(response, userArgs);
   } catch (error) {

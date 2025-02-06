@@ -1,7 +1,7 @@
+// todo change provider into subtype
 export type Config = {
-  provider: "ollama" | "api";
+  provider: "ollama" | "google" | "openai" | "anthropic" | "deepseek";
   model: string;
-  baseUrl?: string;
   session: boolean;
   forceBashHistoyWrite?: boolean;
 };

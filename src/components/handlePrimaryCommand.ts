@@ -7,9 +7,7 @@ import { handleSessionCommand } from "./sessionHandeling";
 import { CLIArgs } from "../types/cliArgs";
 import { Primary, ConfigSubCommand } from "../util/constants";
 
-export async function handlePrimaryCommand(
-  userArgs: CLIArgs,
-) {
+export async function handlePrimaryCommand(userArgs: CLIArgs) {
   switch (userArgs.primary) {
     case Primary.EXECUTE:
       await handleExecuteCommand(userArgs);

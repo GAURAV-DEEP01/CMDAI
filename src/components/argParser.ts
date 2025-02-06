@@ -141,7 +141,7 @@ function parseFlags(args: string[], primary: Primary): Partial<CLIArgs> {
             "MISSING_VALUE"
           );
         result[flag.substring(2).toLowerCase() as keyof CLIArgs] = value as any;
-        break
+        break;
       case Flag.VERBOSE:
         result.verbose = true;
         break;
@@ -244,10 +244,7 @@ function isQuotedFlag(arg: string): boolean {
   return arg.startsWith("--") && arg.includes('="');
 }
 
-function handleQuotedFlag(
-  arg: string,
-  normalized: string[]
-): boolean {
+function handleQuotedFlag(arg: string, normalized: string[]): boolean {
   const [flag, ...rest] = arg.split('="');
   const value = rest.join('="');
 
@@ -396,7 +393,8 @@ function validateCommandCombinations(args: Partial<CLIArgs>): void {
     );
     if (hasOtherFlags) {
       throw new ArgumentError(
-        `${args.help ? "Help" : "Version"
+        `${
+          args.help ? "Help" : "Version"
         } flag cannot be combined with other flags`,
         "INVALID_FLAG_COMBINATION"
       );

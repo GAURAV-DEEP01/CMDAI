@@ -34,7 +34,9 @@ export function handleSessionCommand(userArgs: CLIArgs) {
         handleSessionStatus(config);
         break;
       default:
-        throw new Error(`Invalid session sub-command: ${userArgs?.subCommand}`);
+        throw new Error(
+          `Invalid session sub-command: ${userArgs?.subCommand}\n`
+        );
     }
   } catch (error) {
     console.error(
@@ -51,7 +53,9 @@ function writeConfigFile(config: any) {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
     process.stdout.write(`${STATUS_ICONS.SUCCESS} Config file updated\n`);
   } catch (error) {
-    throw new Error(`Failed to write config file: ${(error as Error).message}`);
+    throw new Error(
+      `Failed to write config file: ${(error as Error).message}\n`
+    );
   }
 }
 

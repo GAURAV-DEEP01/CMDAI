@@ -50,8 +50,7 @@ function showHelp() {
     ${clc.blue("clai")}                    # Rerun last command.
     ${clc.blue('clai --model="deepseek-r1:7b" --verbose')}
     ${clc.blue("clai --prompt=\"echo 'Hello, world!'\"")}\n
-    ${clc.blue('clai --file="example.txt"')}
-  `);
+    ${clc.blue('clai --file="example.txt"')}\n`);
 }
 
 function showVersion() {

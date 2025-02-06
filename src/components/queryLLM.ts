@@ -157,7 +157,7 @@ const validateAndParseResponse = (response: string): ResponseType => {
       const errorMessages = result.error.issues
         .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
         .join("\n");
-      throw new Error(`Validation failed:\n${errorMessages}`);
+      throw new Error(`Validation failed:\n${errorMessages}\n`);
     }
 
     return result.data;

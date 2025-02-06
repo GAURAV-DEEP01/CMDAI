@@ -73,7 +73,6 @@ async function handleCommandResponse(
 
     if (!answer.analyze) process.exit(1);
 
-
     await analyzeCommandExecution({
       command: response.corrected_command,
       output,

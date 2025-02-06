@@ -80,16 +80,16 @@ main() {
     create_clai_dir
     build_project
     echo "
-
  ██████╗  ██╗        █████╗    ██╗
 ██╔════╝  ██║       ██╔══██╗   ██║
 ██║       ██║       ███████║   ██║
 ██║       ██║       ██╔══██║   ██║
 ╚██████╗  ███████╗  ██║  ██║   ██║
- ╚═════╝  ╚══════╝  ╚═╝  ╚═╝   ╚═╝
-                           "
+ ╚═════╝  ╚══════╝  ╚═╝  ╚═╝   ╚═╝"
 
 echo "\nCLAI setup completed successfully!"
+echo "to get started:"
+echo "Run \033[1;32mclai --help\033[0m to list all the commands."
     if [ "$SHELL_NAME" = "bash" ]; then
         echo "You may need to restart your shell or run: source $shell_rc"
     fi

@@ -5,6 +5,7 @@ import inquirer from 'inquirer';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import { Config, Provider } from '../types/config';
+import clc from 'cli-color';
 const homeDir = os.homedir();
 const CONFIG_DIR = path.join(homeDir, '.clai');
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
@@ -168,9 +169,12 @@ export function readConfig(): Config {
     return JSON.parse(data);
   } catch (error) {
     if (error instanceof Error) {
-      console.error('Error reading config file:', error.message);
+      console.error(
+        `${clc.red.bold('Error')} reading config file:`,
+        error.message,
+      );
     } else {
-      console.error('Error reading config file:', error);
+      console.error(`${clc.red.bold('Error')} reading config file:`, error);
     }
     process.exit(0);
   }

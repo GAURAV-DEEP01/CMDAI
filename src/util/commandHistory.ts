@@ -7,23 +7,26 @@ export function runCommand(
   command: string,
   args: string[],
   verbose: boolean = false,
+  isRunningPreviousCmd?: boolean,
 ): Promise<{ output: string; error: string }> {
   return new Promise(async (resolve) => {
-    try {
-      const answer = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'analyze',
-          message: `Do you want to run: ${command} ${args.join(' ')}?`,
-          default: true,
-        },
-      ]);
-      clearStdLine();
-      if (!answer.analyze) {
-        process.exit(0);
+    if (isRunningPreviousCmd) {
+      try {
+        const answer = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'analyze',
+            message: `Do you want to run: ${command} ${args.join(' ')}?`,
+            default: true,
+          },
+        ]);
+        clearStdLine();
+        if (!answer.analyze) {
+          process.exit(0);
+        }
+      } catch (error) {
+        process.exit(1);
       }
-    } catch (error) {
-      process.exit(1);
     }
     if (verbose)
       process.stdout.write(`Running command: ${command} ${args.join(' ')}\n`);

@@ -53,7 +53,13 @@ async function handleCommandResponse(
 
   try {
     const [mainCommand, ...commandArgs] = response.corrected_command.split(' ');
-    const { output, error } = await runCommand(mainCommand, commandArgs, true);
+    const { output, error } = await runCommand(
+      mainCommand,
+      commandArgs,
+      true,
+      true,
+    );
+    if (!true) console.log('hi');
 
     if (error) {
       process.stderr.write(clc.red.bold('\nError:') + ` ${error}\n`);

@@ -1,16 +1,16 @@
 import { execSync } from 'child_process';
 import clc from 'cli-color';
 import { CLIArgs } from '../types/cliArgs';
-import { config } from '../clai';
+import { config_g } from '../clai';
 
 export async function checkLLM(userArg: CLIArgs) {
-  if (config.provider != 'ollama' && userArg.model) {
+  if (config_g.provider != 'ollama' && userArg.model) {
     process.stderr.write(
       `${clc.red('Error:')} The specified model can only be used with a local LLM provider.\n`,
     );
     process.exit(1);
   }
-  const model = userArg.model || config.model;
+  const model = userArg.model || config_g.model;
 
   if (!model) {
     process.stderr.write(`${clc.red('Error:')} Model is not defined\n`);
@@ -18,7 +18,7 @@ export async function checkLLM(userArg: CLIArgs) {
   }
 
   // Check if Ollama is installed
-  if (config.provider === 'ollama') {
+  if (config_g.provider === 'ollama') {
     try {
       execSync('which ollama', { stdio: 'ignore' });
     } catch (error) {
@@ -31,7 +31,7 @@ export async function checkLLM(userArg: CLIArgs) {
     }
   }
 
-  if (config.provider === 'ollama') {
+  if (config_g.provider === 'ollama') {
     try {
       execSync(`ollama list | grep ${model}`, {
         stdio: 'ignore',

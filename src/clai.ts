@@ -8,7 +8,7 @@ import { handlePrimaryCommand } from './components/handlePrimaryCommand';
 import { Config } from './types/config';
 import clc from 'cli-color';
 
-export let config: Config;
+export let config_g: Config;
 
 async function main() {
   try {
@@ -16,14 +16,13 @@ async function main() {
 
     if (showInfo(userArgs)) process.exit(0);
 
-    config = await initializeConfig();
+    config_g = await initializeConfig();
     await checkLLM(userArgs);
 
     await handlePrimaryCommand(userArgs);
   } catch (error) {
     console.error(
-      `${clc.red('Unexpected error:')} ${
-        error instanceof Error ? error.message : error
+      `${clc.red('Unexpected error:')} ${error instanceof Error ? error.message : error
       }`,
     );
     process.exit(1);

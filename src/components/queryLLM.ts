@@ -9,7 +9,7 @@ import { clearStdLine, loadingAnimation } from '../util/tools';
 import { ResponseType } from '../types/responseAnalysis';
 import { validateAndParseResponse } from '../util/responseValidation';
 import { CLIArgs } from '../types/cliArgs';
-import { config } from '../clai';
+import { config_g } from '../clai';
 import dotenv from 'dotenv';
 import os from 'os';
 dotenv.config({ path: `${os.homedir()}/.clai/.env` });
@@ -22,11 +22,11 @@ export default async function queryLLM(
 ): Promise<ResponseType> {
   const { verbose, filePath } = userArgs;
 
-  if (!config) process.exit(1);
+  if (!config_g) process.exit(1);
 
-  const model = userArgs.model || config.model;
+  const model = userArgs.model || config_g.model;
 
-  const { provider } = config;
+  const { provider } = config_g;
   const isFile = !!filePath;
 
   try {
@@ -36,8 +36,7 @@ export default async function queryLLM(
       );
     }
 
-    const VALIDATION_SCHEMA = `// JSON Validation Requirements ${
-      isFile
+    const VALIDATION_SCHEMA = `// JSON Validation Requirements ${isFile
         ? `{
       "file_type": "string (type of the file being analyzed)",
       "summary": "string (brief summary of the file)",
@@ -52,7 +51,7 @@ export default async function queryLLM(
       "corrected_command": "string (directly executable)",
       "explanation": "string? (detailed analysis)",
     }`
-    }`;
+      }`;
 
     let interval: NodeJS.Timeout | null = null;
     let i = 0;
@@ -61,8 +60,7 @@ export default async function queryLLM(
     // Connection animation
     connecting = setInterval(() => {
       process.stdout.write(
-        `\rConnecting to model ${
-          loadingAnimation[i++ % loadingAnimation.length]
+        `\rConnecting to model ${loadingAnimation[i++ % loadingAnimation.length]
         }`,
       );
     }, 50);

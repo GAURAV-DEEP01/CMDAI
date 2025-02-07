@@ -7,7 +7,7 @@ import { checkLLM } from './util/checkLLM';
 import { handlePrimaryCommand } from './components/handlePrimaryCommand';
 import { Config } from './types/config';
 import clc from 'cli-color';
-// todo remove session and check 
+
 export let config_g: Config;
 
 async function main() {

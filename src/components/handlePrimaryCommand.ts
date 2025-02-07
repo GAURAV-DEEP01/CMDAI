@@ -4,7 +4,6 @@ import {
   handleFileCommand,
   handleAskCommand,
 } from './commandHandler';
-import { handleSessionCommand } from './sessionHandeling';
 import { CLIArgs } from '../types/cliArgs';
 import { Primary, ConfigSubCommand } from '../util/constants';
 
@@ -24,16 +23,6 @@ export async function handlePrimaryCommand(userArgs: CLIArgs) {
 
     case Primary.ASK:
       await handleAskCommand(userArgs);
-      process.exit(0);
-
-    //v2
-    case Primary.CHECK:
-      process.stderr.write('Comming soon...\n');
-      process.exit(0);
-
-    case Primary.SESSION:
-      process.stdout.write('Comming soon...\n');
-      handleSessionCommand(userArgs);
       process.exit(0);
 
     default:

@@ -117,7 +117,6 @@ export async function runSetup() {
       answers.providerType === 'ollama'
         ? answers.ollamaModel
         : answers.apiModel,
-    session: false,
   };
 
   if (answers.providerType !== 'ollama') {

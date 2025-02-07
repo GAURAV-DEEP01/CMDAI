@@ -1,12 +1,8 @@
-import {
-  ConfigSubCommand,
-  Primary,
-  SessionSubCommand,
-} from '../util/constants';
+import { ConfigSubCommand, Primary } from '../util/constants';
 
 export interface CLIArgs {
   primary: Primary;
-  subCommand?: SessionSubCommand | ConfigSubCommand;
+  subCommand?: ConfigSubCommand;
   model?: string;
   prompt?: string;
   verbose?: boolean;

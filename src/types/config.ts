@@ -9,6 +9,5 @@ export type Provider =
 export type Config = {
   provider: Provider;
   model: string;
-  session: boolean;
   forceBashHistoyWrite?: boolean;
 };

@@ -61,9 +61,3 @@ function showVersion() {
     console.error(`${clc.red('Error reading version:')}`, error);
   }
 }
-
-// v2 additional commands:
-// ${clc.green("clai session start")}# Start a new session.
-// ${clc.green("clai session end")}  # End the current session.
-// ${clc.green("clai session status")} # Show session status.
-// ${clc.green("clai check")}        # Check the current status.

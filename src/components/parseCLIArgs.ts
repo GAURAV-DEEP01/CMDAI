@@ -161,9 +161,3 @@ export const parseCLIArgs = (): CLIArgs => {
 // clai --ask="<question>" --model="<model>"
 
 // same as above for short flags
-
-// v2
-// clai session start
-// clai check
-// clai session end
-// clai session status

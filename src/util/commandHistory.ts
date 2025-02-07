@@ -36,14 +36,52 @@ export function runCommand(
     let error = '';
     let timeout: NodeJS.Timeout;
 
+    let stdoutBuffer = '';
+    let stderrBuffer = '';
+
+    const processData = (
+      data: string,
+      buffer: string,
+      prefix: string,
+      isError: boolean,
+    ): { newBuffer: string; processed: string } => {
+      buffer += data;
+      const lines = buffer.split(/\r?\n/);
+      const newBuffer = lines.pop() || '';
+      const stream = isError ? process.stderr : process.stdout;
+      lines.forEach((line) => {
+        stream.write(`${prefix}${line}\n`);
+      });
+      return {
+        newBuffer,
+        processed: lines.join('\n') + (newBuffer ? '' : '\n'),
+      };
+    };
+
     // Handle data on stdout
     spawnedProcess.stdout.on('data', (data) => {
-      output += data.toString();
+      const dataStr = data.toString();
+      output += dataStr;
+      const result = processData(
+        dataStr,
+        stdoutBuffer,
+        clc.green.bold('Output: '),
+        false,
+      );
+      stdoutBuffer = result.newBuffer;
     });
 
-    // Handle data on stderr (error stream)
+    // Handle data on stderr
     spawnedProcess.stderr.on('data', (data) => {
-      error += data.toString();
+      const dataStr = data.toString();
+      error += dataStr;
+      const result = processData(
+        dataStr,
+        stderrBuffer,
+        clc.red.bold('Error: '),
+        true,
+      );
+      stderrBuffer = result.newBuffer;
     });
 
     timeout = setTimeout(async () => {
@@ -66,12 +104,29 @@ export function runCommand(
       }
     }, 10000);
 
-    // Handle the spawnedProcess exit
+    // Handle process exit
+    const finalFlush = () => {
+      // Flush remaining stdout
+      if (stdoutBuffer.length > 0) {
+        process.stdout.write(clc.green.bold('Output: ') + stdoutBuffer + '\n');
+        output += stdoutBuffer;
+        stdoutBuffer = '';
+      }
+      // Flush remaining stderr
+      if (stderrBuffer.length > 0) {
+        process.stderr.write(clc.red.bold('Error: ') + stderrBuffer + '\n');
+        error += stderrBuffer;
+        stderrBuffer = '';
+      }
+    };
+
     spawnedProcess.on('close', (code) => {
       clearTimeout(timeout);
+      finalFlush();
+
       if (code !== 0) {
         if (code !== null) {
-          error = `\nPrevious command failed with exit code ${code}:\n${error}`;
+          error = `\nCommand failed with exit code ${code}:\n${error}`;
         } else {
           error = `\nCommand exited\n${error}`;
         }
@@ -81,6 +136,7 @@ export function runCommand(
 
     spawnedProcess.on('error', (err) => {
       clearTimeout(timeout);
+      finalFlush();
       error = `Process spawn error: ${err.message}`;
       resolve({ output, error });
     });
@@ -121,18 +177,4 @@ export function getLastCommand(offset: number = 1): string {
     );
     return '';
   }
-}
-
-export function detectShellEnvironment(error: string): string {
-  const patterns = {
-    bash: /(bash:|syntax error near unexpected token|declare -)/i,
-    zsh: /(zsh:|no matches found:|bad pattern)/i,
-    powershell: /(PS>|The term '.*' is not recognized)/i,
-    cmd: /'(.*)' is not recognized as an internal or external command/i,
-  };
-
-  return (
-    Object.entries(patterns).find(([_, regex]) => regex.test(error))?.[0] ||
-    'posix'
-  );
 }

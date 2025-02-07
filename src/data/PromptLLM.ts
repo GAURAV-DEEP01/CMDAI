@@ -1,4 +1,4 @@
-import { detectShellEnvironment } from '../util/commandHistory';
+import { detectShellEnvironment } from '../util/tools';
 
 function buildBasePrompt(
   engineType: 'command-line validation' | 'file analysis',

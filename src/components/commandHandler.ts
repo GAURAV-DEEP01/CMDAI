@@ -12,14 +12,12 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
     // Determine command source
     const commandStr = userArgs.commandStr || getLastCommand();
 
-    if (!commandStr) {
+    if (!commandStr)
       throw new Error('No command provided and no history found');
-    }
 
     // Validate command input
-    if (commandStr.trim().length === 0) {
+    if (commandStr.trim().length === 0)
       throw new Error('Empty command provided');
-    }
 
     // Execute the command
     const [mainCommand, ...commandArgs] = commandStr.split(/\s+/);
@@ -57,9 +55,7 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
 export async function handleFileCommand(userArgs: CLIArgs) {
   try {
     const filePath = userArgs.filePath;
-    if (!filePath) {
-      throw new Error('No file path provided');
-    }
+    if (!filePath) throw new Error('No file path provided');
 
     // Check if file exists using relative path
     try {
@@ -95,8 +91,26 @@ export async function handleConfigCommand(subCommand: ConfigSubCommand) {
     process.stdout.write(`${JSON.stringify(config, null, 2)}\n`);
   } else if (subCommand === ConfigSubCommand.SET) {
     await runSetup();
-  } else {
-    process.stderr.write(`${clc.red('Error:')} Invalid Config command`);
-  }
+  } else process.stderr.write(`${clc.red('Error:')} Invalid Config command`);
+
   process.exit(1);
+}
+
+export async function handleAskCommand(userArgs: CLIArgs) {
+  try {
+    const askString = userArgs.askString;
+    if (!askString) throw new Error('No input provided');
+
+    await analyzeCommandExecution({
+      userArgs: userArgs,
+      askString,
+    });
+  } catch (error) {
+    process.stderr.write(
+      `\n${clc.red('Error:')} ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }\n`,
+    );
+    process.exit(1);
+  }
 }

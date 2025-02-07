@@ -2,6 +2,7 @@ import {
   handleExecuteCommand,
   handleConfigCommand,
   handleFileCommand,
+  handleAskCommand,
 } from './commandHandler';
 import { handleSessionCommand } from './sessionHandeling';
 import { CLIArgs } from '../types/cliArgs';
@@ -19,6 +20,10 @@ export async function handlePrimaryCommand(userArgs: CLIArgs) {
 
     case Primary.FILE:
       await handleFileCommand(userArgs);
+      process.exit(0);
+
+    case Primary.ASK:
+      await handleAskCommand(userArgs);
       process.exit(0);
 
     //v2

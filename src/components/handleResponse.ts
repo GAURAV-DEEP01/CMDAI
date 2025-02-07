@@ -16,9 +16,13 @@ export async function handleResponse(
 ) {
   if (isCommandAnalysis(response)) {
     await handleCommandResponse(response, userArgs);
-  } else {
+  } else if (isFileAnalysis(response)) {
     handleFileResponse(response);
   }
+}
+
+function isFileAnalysis(response: ResponseType): response is FileAnalysis {
+  return (response as FileAnalysis).file_type !== undefined;
 }
 
 function isCommandAnalysis(
@@ -56,10 +60,9 @@ async function handleCommandResponse(
     const { output, error } = await runCommand(
       mainCommand,
       commandArgs,
-      true,
+      userArgs.verbose,
       true,
     );
-    if (!true) console.log('hi');
 
     if (error) {
       process.stderr.write(clc.red.bold('\nError:') + ` ${error}\n`);

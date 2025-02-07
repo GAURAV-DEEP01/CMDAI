@@ -17,12 +17,14 @@ async function main() {
     if (showInfo(userArgs)) process.exit(0);
 
     config_g = await initializeConfig();
+    if (!config_g) throw new Error('Empty Config File');
     await checkLLM(userArgs);
 
     await handlePrimaryCommand(userArgs);
   } catch (error) {
     console.error(
-      `${clc.red('Unexpected error:')} ${error instanceof Error ? error.message : error
+      `${clc.red('Unexpected error:')} ${
+        error instanceof Error ? error.message : error
       }`,
     );
     process.exit(1);

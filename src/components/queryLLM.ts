@@ -1,17 +1,23 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { createOpenAI } from '@ai-sdk/openai';
-import { createDeepSeek } from '@ai-sdk/deepseek';
-import { createAnthropic } from '@ai-sdk/anthropic';
-import { createOllama } from 'ollama-ai-provider';
-import { streamText } from 'ai';
 import clc from 'cli-color';
-import { clearStdLine, loadingAnimation } from '../util/tools';
+import {
+  clearStdLine,
+  loadingAnimation,
+  ValidationSchema,
+} from '../util/tools';
 import { ResponseType } from '../types/responseAnalysis';
 import { validateAndParseResponse } from '../util/responseValidation';
 import { CLIArgs } from '../types/cliArgs';
 import { config_g } from '../clai';
 import dotenv from 'dotenv';
 import os from 'os';
+import {
+  queryGemini,
+  queryOpenai,
+  queryDeepseek,
+  queryAnthropic,
+  queryOllama,
+} from '../util/provider';
+
 dotenv.config({ path: `${os.homedir()}/.clai/.env` });
 const MAX_RETRIES = 3;
 
@@ -20,39 +26,17 @@ export default async function queryLLM(
   input: string,
   retryCount: number = 0,
 ): Promise<ResponseType> {
-  const { verbose, filePath } = userArgs;
-
-  if (!config_g) process.exit(1);
+  const { verbose, filePath, askString } = userArgs;
+  const { provider } = config_g;
 
   const model = userArgs.model || config_g.model;
-
-  const { provider } = config_g;
-  const isFile = !!filePath;
+  if (retryCount !== 0) {
+    process.stdout.write(
+      `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\n`,
+    );
+  }
 
   try {
-    if (retryCount !== 0) {
-      process.stdout.write(
-        `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\n`,
-      );
-    }
-
-    const VALIDATION_SCHEMA = `// JSON Validation Requirements ${isFile
-        ? `{
-      "file_type": "string (type of the file being analyzed)",
-      "summary": "string (brief summary of the file)",
-      "issues": ["string", "...", "..."],
-      "recommendations": ["string", "...", "..."],
-      "security_analysis": "string (detailed security analysis)"
-    }`
-        : `
-    {
-      "description": "string (technical explanation)",
-      "possible_fixes": ["string", "...", "..."],
-      "corrected_command": "string (directly executable)",
-      "explanation": "string? (detailed analysis)",
-    }`
-      }`;
-
     let interval: NodeJS.Timeout | null = null;
     let i = 0;
     let connecting: NodeJS.Timeout | null = null;
@@ -60,7 +44,8 @@ export default async function queryLLM(
     // Connection animation
     connecting = setInterval(() => {
       process.stdout.write(
-        `\rConnecting to model ${loadingAnimation[i++ % loadingAnimation.length]
+        `\rConnecting to model ${
+          loadingAnimation[i++ % loadingAnimation.length]
         }`,
       );
     }, 50);
@@ -68,8 +53,8 @@ export default async function queryLLM(
     // Route to appropriate provider
     let aiOutput = '';
     const fullPrompt =
-      retryCount > 0
-        ? `${input}\n\nCORRECT FORMAT:\n${VALIDATION_SCHEMA}`
+      retryCount > 0 && !askString
+        ? `${input}\n\nCORRECT FORMAT:\n${ValidationSchema(!!filePath)}`
         : input;
 
     // Get the appropriate provider client
@@ -109,13 +94,13 @@ export default async function queryLLM(
       default:
         throw new Error(`Unsupported provider: ${provider}`);
     }
-
-    process.stdout.write(clc.erase.line);
-
+    clearInterval(connecting);
+    clearStdLine();
+    process.stdout.write('\r' + clc.erase.line + '\n');
     try {
       let isResponded = false;
       for await (const chunk of responseStream) {
-        if (!verbose && !isResponded) {
+        if (!verbose && !isResponded && !askString) {
           clearInterval(connecting);
           clearStdLine();
           isResponded = true;
@@ -127,7 +112,7 @@ export default async function queryLLM(
           }, 50);
         }
         aiOutput += chunk;
-        if (verbose) {
+        if (verbose || askString) {
           process.stdout.write(chunk);
         }
       }
@@ -137,8 +122,8 @@ export default async function queryLLM(
         process.stdout.write(clc.erase.line);
       }
     }
-
     process.stdout.write('\n');
+    if (askString) return aiOutput;
     return validateAndParseResponse(aiOutput);
   } catch (error) {
     if (retryCount < MAX_RETRIES - 1) {
@@ -154,53 +139,4 @@ export default async function queryLLM(
     );
     process.exit(1);
   }
-}
-
-// Update provider functions to use streamText
-function queryGemini(model: string, input: string, apiKey: string) {
-  const google = createGoogleGenerativeAI({
-    apiKey,
-  });
-  return streamText({
-    model: google(model),
-    prompt: input,
-  });
-}
-
-function queryOpenai(model: string, input: string, apiKey: string) {
-  const openai = createOpenAI({
-    apiKey,
-  });
-  return streamText({
-    model: openai(model),
-    prompt: input,
-  });
-}
-
-function queryDeepseek(model: string, input: string, apiKey: string) {
-  const deepseek = createDeepSeek({
-    apiKey,
-  });
-  return streamText({
-    model: deepseek(model),
-    prompt: input,
-  });
-}
-
-function queryAnthropic(model: string, input: string, apiKey: string) {
-  const anthropic = createAnthropic({
-    apiKey,
-  });
-  return streamText({
-    model: anthropic(model),
-    prompt: input,
-  });
-}
-
-function queryOllama(model: string, input: string) {
-  const ollama = createOllama();
-  return streamText({
-    model: ollama(model),
-    prompt: input,
-  });
 }

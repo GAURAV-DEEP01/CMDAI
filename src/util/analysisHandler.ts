@@ -10,22 +10,22 @@ export async function analyzeCommandExecution(params: {
   userArgs: CLIArgs;
   fileContent?: string;
   filePath?: string;
+  askString?: string;
 }) {
-  const { userArgs, fileContent, filePath } = params;
+  const { userArgs, fileContent, filePath, askString } = params;
   let input: string;
-  if (fileContent && filePath) {
-    input = userArgs.prompt
-      ? filePrompt(fileContent, filePath, userArgs.prompt)
-      : filePrompt(fileContent, filePath);
+
+  if (askString) {
+    input = askString;
+  } else if (fileContent && filePath) {
+    input = filePrompt(fileContent, filePath, userArgs.prompt || '');
   } else {
-    input = userArgs.prompt
-      ? defaultPrompt(
-          params.command!,
-          params.output || '',
-          params.error || '',
-          userArgs.prompt,
-        )
-      : defaultPrompt(params.command!, params.output || '', params.error || '');
+    input = defaultPrompt(
+      params.command || '',
+      params.output || '',
+      params.error || '',
+      userArgs.prompt || '',
+    );
   }
 
   try {

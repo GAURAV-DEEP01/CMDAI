@@ -13,4 +13,4 @@ export interface FileAnalysis {
   security_analysis: string;
 }
 
-export type ResponseType = CommandAnalysis | FileAnalysis;
+export type ResponseType = CommandAnalysis | FileAnalysis | string;

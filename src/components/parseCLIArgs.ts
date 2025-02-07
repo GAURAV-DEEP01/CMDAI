@@ -2,41 +2,6 @@ import { Command } from 'commander';
 import { CLIArgs } from '../types/cliArgs';
 import { Primary, ConfigSubCommand } from '../util/constants';
 
-// command combinations
-// clai
-// clai config set
-// clai config get
-// clai --version
-// clai --help
-// clai --verbose
-// clai --command="<command>"
-// clai --command="<command>" --model="<model>"
-// clai --prompt="<prompt>"
-// clai --prompt="<prompt>" --model="<model>"
-// clai --command="<command>" --verbose
-// clai --command="<command>" --verbose --model="<model>"
-// clai --prompt="<prompt>" --verbose
-// clai --prompt="<prompt>" --verbose --model="<model>"
-// clai --command="<command>" --prompt="<prompt>"
-// clai --command="<command>" --prompt="<prompt>" --model="<model>"
-// clai --command="<command>" --prompt="<prompt>" --verbose
-// clai --command="<command>" --prompt="<prompt>" --verbose --model="<model>"
-// clai --file="<file>" --verbose
-// clai --file="<file>" --verbose --model="<model>"
-// clai --file="<file>" --prompt="<question>"
-// clai --file="<file>" --prompt="<question>" --model="<model>"
-// clai --file="<file>" --prompt="<question>" --verbose
-// clai --file="<file>" --prompt="<question>" --verbose --model="<model>"
-// clai --ask="<question>" --model="<model>"
-
-// same as above for short flags
-
-// v2
-// clai session start
-// clai check
-// clai session end
-// clai session status
-
 const validateCLIArgs = (args: CLIArgs): void => {
   const checkInvalidOptions = (...optionsToCheck: (keyof CLIArgs)[]): void => {
     const invalidOptions = optionsToCheck.filter(
@@ -167,3 +132,38 @@ export const parseCLIArgs = (): CLIArgs => {
 
   return cliArgs;
 };
+
+// command combinations
+// clai
+// clai config set
+// clai config get
+// clai --version
+// clai --help
+// clai --verbose
+// clai --command="<command>"
+// clai --command="<command>" --model="<model>"
+// clai --prompt="<prompt>"
+// clai --prompt="<prompt>" --model="<model>"
+// clai --command="<command>" --verbose
+// clai --command="<command>" --verbose --model="<model>"
+// clai --prompt="<prompt>" --verbose
+// clai --prompt="<prompt>" --verbose --model="<model>"
+// clai --command="<command>" --prompt="<prompt>"
+// clai --command="<command>" --prompt="<prompt>" --model="<model>"
+// clai --command="<command>" --prompt="<prompt>" --verbose
+// clai --command="<command>" --prompt="<prompt>" --verbose --model="<model>"
+// clai --file="<file>" --verbose
+// clai --file="<file>" --verbose --model="<model>"
+// clai --file="<file>" --prompt="<question>"
+// clai --file="<file>" --prompt="<question>" --model="<model>"
+// clai --file="<file>" --prompt="<question>" --verbose
+// clai --file="<file>" --prompt="<question>" --verbose --model="<model>"
+// clai --ask="<question>" --model="<model>"
+
+// same as above for short flags
+
+// v2
+// clai session start
+// clai check
+// clai session end
+// clai session status

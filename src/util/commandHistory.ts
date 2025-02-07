@@ -1,20 +1,20 @@
-import { execSync, spawn } from "child_process";
-import inquirer from "inquirer";
-import { clearStdLine } from "../util/tools";
-import clc from "cli-color";
+import { execSync, spawn } from 'child_process';
+import inquirer from 'inquirer';
+import { clearStdLine } from '../util/tools';
+import clc from 'cli-color';
 
 export function runCommand(
   command: string,
   args: string[],
-  verbose: boolean = false
+  verbose: boolean = false,
 ): Promise<{ output: string; error: string }> {
   return new Promise(async (resolve) => {
     try {
       const answer = await inquirer.prompt([
         {
-          type: "confirm",
-          name: "analyze",
-          message: `Do you want to run: ${command} ${args.join(" ")}?`,
+          type: 'confirm',
+          name: 'analyze',
+          message: `Do you want to run: ${command} ${args.join(' ')}?`,
           default: true,
         },
       ]);
@@ -26,20 +26,20 @@ export function runCommand(
       process.exit(1);
     }
     if (verbose)
-      process.stdout.write(`Running command: ${command} ${args.join(" ")}\n`);
+      process.stdout.write(`Running command: ${command} ${args.join(' ')}\n`);
 
     const spawnedProcess = spawn(command, args, { shell: true });
-    let output = "";
-    let error = "";
+    let output = '';
+    let error = '';
     let timeout: NodeJS.Timeout;
 
     // Handle data on stdout
-    spawnedProcess.stdout.on("data", (data) => {
+    spawnedProcess.stdout.on('data', (data) => {
       output += data.toString();
     });
 
     // Handle data on stderr (error stream)
-    spawnedProcess.stderr.on("data", (data) => {
+    spawnedProcess.stderr.on('data', (data) => {
       error += data.toString();
     });
 
@@ -47,8 +47,8 @@ export function runCommand(
       try {
         const answer = await inquirer.prompt([
           {
-            type: "confirm",
-            name: "analyze",
+            type: 'confirm',
+            name: 'analyze',
             message: `Process running for too long, Do you want to kill the process?`,
             default: true,
           },
@@ -58,13 +58,13 @@ export function runCommand(
           spawnedProcess.kill();
         }
       } catch (error) {
-        process.stderr.write("Exited\n");
+        process.stderr.write('Exited\n');
         process.exit(1);
       }
     }, 10000);
 
     // Handle the spawnedProcess exit
-    spawnedProcess.on("close", (code) => {
+    spawnedProcess.on('close', (code) => {
       clearTimeout(timeout);
       if (code !== 0) {
         if (code !== null) {
@@ -76,7 +76,7 @@ export function runCommand(
       resolve({ output, error });
     });
 
-    spawnedProcess.on("error", (err) => {
+    spawnedProcess.on('error', (err) => {
       clearTimeout(timeout);
       error = `Process spawn error: ${err.message}`;
       resolve({ output, error });
@@ -87,33 +87,36 @@ export function runCommand(
 // Helper: Run a shell command and capture its output
 export function getLastCommand(offset: number = 1): string {
   try {
-    const shell = process.env.SHELL || "";
+    const shell = process.env.SHELL || '';
     let historyCommand: string;
 
-    if (shell.includes("zsh")) {
-      const historyFile = process.env.HISTFILE || "~/.zsh_history";
-      historyCommand = `tail -n ${offset + 1
-        } ${historyFile} | head -n 1 | sed 's/^: [0-9]*:[0-9];//'`;
-    } else if (shell.includes("bash")) {
+    if (shell.includes('zsh')) {
+      const historyFile = process.env.HISTFILE || '~/.zsh_history';
+      historyCommand = `tail -n ${
+        offset + 1
+      } ${historyFile} | head -n 1 | sed 's/^: [0-9]*:[0-9];//'`;
+    } else if (shell.includes('bash')) {
       const historyFile = `${process.env.HOME}/.bash_history`;
       historyCommand = `tail -n ${offset} ${historyFile} | head -n 1`;
     } else {
       process.stderr.write(
-        `${clc.red("Error:")} Unsupported shell. Please provide a command manually.\n`
+        `${clc.red('Error:')} Unsupported shell. Please provide a command manually.\n`,
       );
-      return "";
+      return '';
     }
 
     const command = execSync(historyCommand, { shell: shell })
       .toString()
       .trim();
-    if (command.includes("clai")) {
+    if (command.includes('clai')) {
       return getLastCommand(offset + 1);
     }
     return command;
   } catch (error) {
-    process.stderr.write(`${clc.red("Error: ")} Failed to fetch the last command from history.\n`);
-    return "";
+    process.stderr.write(
+      `${clc.red('Error: ')} Failed to fetch the last command from history.\n`,
+    );
+    return '';
   }
 }
 
@@ -127,12 +130,6 @@ export function detectShellEnvironment(error: string): string {
 
   return (
     Object.entries(patterns).find(([_, regex]) => regex.test(error))?.[0] ||
-    "posix"
+    'posix'
   );
-}
-
-// Helper: Fetch the last command from shell history
-export function getSessionCommandLog(): string {
-  // v2 retuns log of session
-  return "getsessioncommand";
 }

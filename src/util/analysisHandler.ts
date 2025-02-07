@@ -1,7 +1,7 @@
-import { defaultPrompt, filePrompt } from "../data/PromptLLM";
-import { handleResponse } from "../components/handleResponse";
-import queryLLM from "../components/queryLLM";
-import { CLIArgs } from "../types/cliArgs";
+import { defaultPrompt, filePrompt } from '../data/PromptLLM';
+import { handleResponse } from '../components/handleResponse';
+import queryLLM from '../components/queryLLM';
+import { CLIArgs } from '../types/cliArgs';
 
 export async function analyzeCommandExecution(params: {
   command?: string;
@@ -20,12 +20,12 @@ export async function analyzeCommandExecution(params: {
   } else {
     input = userArgs.prompt
       ? defaultPrompt(
-        params.command!,
-        params.output || "",
-        params.error || "",
-        userArgs.prompt
-      )
-      : defaultPrompt(params.command!, params.output || "", params.error || "");
+          params.command!,
+          params.output || '',
+          params.error || '',
+          userArgs.prompt,
+        )
+      : defaultPrompt(params.command!, params.output || '', params.error || '');
   }
 
   try {
@@ -34,8 +34,8 @@ export async function analyzeCommandExecution(params: {
     await handleResponse(response, userArgs);
   } catch (error) {
     console.error(
-      "\nAnalysis failed:",
-      error instanceof Error ? error.message : "Unknown error"
+      '\nAnalysis failed:',
+      error instanceof Error ? error.message : 'Unknown error',
     );
     process.exit(1);
   }

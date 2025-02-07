@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { ResponseType } from "../types/responseAnalysis";
+import { z } from 'zod';
+import { ResponseType } from '../types/responseAnalysis';
 
 const CommandResponseSchema = z
   .object({
@@ -8,10 +8,10 @@ const CommandResponseSchema = z
     corrected_command: z
       .string()
       .refine((cmd) => isValidCommand(cmd), {
-        message: "Dangerous command detected",
+        message: 'Dangerous command detected',
       })
       .transform((cmd) => sanitizeCommand(cmd)),
-    explanation: z.string().optional().default(""),
+    explanation: z.string().optional().default(''),
   })
   .strict();
 
@@ -33,22 +33,22 @@ export const validateAndParseResponse = (response: string): ResponseType => {
     const jsonBlockRegex = /```json\s*([\s\S]*?)\s*```/;
     const match = response.match(jsonBlockRegex);
 
-    if (!match?.[1]) throw new Error("No valid JSON code block found");
+    if (!match?.[1]) throw new Error('No valid JSON code block found');
 
     const jsonString = match[1]
       .trim()
       .replace(/[\u2018\u2019]/g, "'")
       .replace(/[\u201C\u201D]/g, '"')
-      .replace(/^[\x00-\x1F]+/, "")
-      .replace(/(\r\n|\n|\r)/gm, "");
+      .replace(/^[\x00-\x1F]+/, '')
+      .replace(/(\r\n|\n|\r)/gm, '');
 
     const rawData = JSON.parse(jsonString);
     const result = ResponseSchema.safeParse(rawData);
 
     if (!result.success) {
       const errorMessages = result.error.issues
-        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-        .join("\n");
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join('\n');
       throw new Error(`Validation failed:\n${errorMessages}\n`);
     }
 
@@ -57,7 +57,7 @@ export const validateAndParseResponse = (response: string): ResponseType => {
     throw new Error(
       `Response validation failed: ${
         error instanceof Error ? error.message : error
-      }`
+      }`,
     );
   }
 };
@@ -76,7 +76,7 @@ const isValidCommand = (command: string): boolean => {
 
 const sanitizeCommand = (command: string): string => {
   return command
-    .replace(/\bsudo\b/g, "")
-    .replace(/\s{2,}/g, " ")
+    .replace(/\bsudo\b/g, '')
+    .replace(/\s{2,}/g, ' ')
     .trim();
 };

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-import { showInfo } from "./components/info";
-import { parseCLIArgs } from "./components/parseCLIArgs";
-import { CLIArgs } from "./types/cliArgs";
-import { initializeConfig } from "./util/configHandler";
-import { checkLLM } from "./util/checkLLM";
-import { handlePrimaryCommand } from "./components/handlePrimaryCommand";
-import { Config } from "./types/config";
-import clc from "cli-color";
+import { showInfo } from './components/info';
+import { parseCLIArgs } from './components/parseCLIArgs';
+import { CLIArgs } from './types/cliArgs';
+import { initializeConfig } from './util/configHandler';
+import { checkLLM } from './util/checkLLM';
+import { handlePrimaryCommand } from './components/handlePrimaryCommand';
+import { Config } from './types/config';
+import clc from 'cli-color';
 
 export let config: Config;
 
@@ -22,7 +22,9 @@ async function main() {
     await handlePrimaryCommand(userArgs);
   } catch (error) {
     console.error(
-      `${clc.red("Unexpected error:")} ${error instanceof Error ? error.message : error}`
+      `${clc.red('Unexpected error:')} ${
+        error instanceof Error ? error.message : error
+      }`,
     );
     process.exit(1);
   }
@@ -32,7 +34,7 @@ async function main() {
   try {
     await main();
   } catch (err) {
-    console.error(`${clc.red("ritical error")} during execution:`, err);
+    console.error(`${clc.red('Critical error')} during execution:`, err);
     process.exit(1);
   }
 })();

@@ -11,9 +11,9 @@ import { Primary, ConfigSubCommand } from '../util/constants';
 // clai --verbose
 // clai --command="<command>"
 // clai --command="<command>" --model="<model>"
-// clai --prompt="<prompt>" 
+// clai --prompt="<prompt>"
 // clai --prompt="<prompt>" --model="<model>"
-// clai --command="<command>" --verbose 
+// clai --command="<command>" --verbose
 // clai --command="<command>" --verbose --model="<model>"
 // clai --prompt="<prompt>" --verbose
 // clai --prompt="<prompt>" --verbose --model="<model>"
@@ -29,7 +29,7 @@ import { Primary, ConfigSubCommand } from '../util/constants';
 // clai --file="<file>" --prompt="<question>" --verbose --model="<model>"
 // clai --ask="<question>" --model="<model>"
 
-// same as above for short flags 
+// same as above for short flags
 
 // v2
 // clai session start
@@ -39,9 +39,13 @@ import { Primary, ConfigSubCommand } from '../util/constants';
 
 const validateCLIArgs = (args: CLIArgs): void => {
   const checkInvalidOptions = (...optionsToCheck: (keyof CLIArgs)[]): void => {
-    const invalidOptions = optionsToCheck.filter(opt => args[opt] !== undefined);
+    const invalidOptions = optionsToCheck.filter(
+      (opt) => args[opt] !== undefined,
+    );
     if (invalidOptions.length > 0) {
-      throw new Error(`Invalid options for ${args.primary}: ${invalidOptions.join(', ')}`);
+      throw new Error(
+        `Invalid options for ${args.primary}: ${invalidOptions.join(', ')}`,
+      );
     }
   };
 
@@ -50,21 +54,37 @@ const validateCLIArgs = (args: CLIArgs): void => {
       checkInvalidOptions('commandStr', 'prompt', 'filePath', 'askString');
       break;
     case Primary.VERSION:
-      checkInvalidOptions('commandStr', 'prompt', 'filePath', 'askString', 'help', 'model');
+      checkInvalidOptions(
+        'commandStr',
+        'prompt',
+        'filePath',
+        'askString',
+        'help',
+        'model',
+      );
       break;
     case Primary.HELP:
-      checkInvalidOptions('commandStr', 'prompt', 'filePath', 'askString', 'version', 'model');
+      checkInvalidOptions(
+        'commandStr',
+        'prompt',
+        'filePath',
+        'askString',
+        'version',
+        'model',
+      );
       break;
     case Primary.EXECUTE:
       // Allow EXECUTE without commandStr (interactive mode)
       checkInvalidOptions('filePath', 'askString');
       break;
     case Primary.FILE:
-      if (!args.filePath) throw new Error('--file is required for file primary action');
+      if (!args.filePath)
+        throw new Error('--file is required for file primary action');
       checkInvalidOptions('commandStr', 'askString');
       break;
     case Primary.ASK:
-      if (!args.askString) throw new Error('--ask is required for ask primary action');
+      if (!args.askString)
+        throw new Error('--ask is required for ask primary action');
       checkInvalidOptions('commandStr', 'prompt', 'filePath');
       break;
     default:
@@ -81,17 +101,20 @@ export const parseCLIArgs = (): CLIArgs => {
   const cliArgs: CLIArgs = { primary: Primary.EXECUTE }; // Default to EXECUTE
 
   // Setup config subcommand
-  const configCmd = new Command('config')
-    .description('Manage application configuration');
+  const configCmd = new Command('config').description(
+    'Manage application configuration',
+  );
 
-  configCmd.command(ConfigSubCommand.GET)
+  configCmd
+    .command(ConfigSubCommand.GET)
     .description('Get configuration values')
     .action(() => {
       cliArgs.primary = Primary.CONFIG;
       cliArgs.subCommand = ConfigSubCommand.GET;
     });
 
-  configCmd.command(ConfigSubCommand.SET)
+  configCmd
+    .command(ConfigSubCommand.SET)
     .description('Set configuration values interactively')
     .action(() => {
       cliArgs.primary = Primary.CONFIG;

@@ -1,11 +1,11 @@
-import clc from "cli-color";
-import { getLastCommand, runCommand } from "../util/commandHistory";
-import { analyzeCommandExecution } from "../util/analysisHandler";
-import { CommandExecutionError } from "../types/errors";
-import { CLIArgs } from "../types/cliArgs";
-import { ConfigSubCommand } from "../util/constants";
-import { runSetup, readConfig } from "../util/configHandler";
-import fs from "fs/promises";
+import clc from 'cli-color';
+import { getLastCommand, runCommand } from '../util/commandHistory';
+import { analyzeCommandExecution } from '../util/analysisHandler';
+import { CommandExecutionError } from '../types/errors';
+import { CLIArgs } from '../types/cliArgs';
+import { ConfigSubCommand } from '../util/constants';
+import { runSetup, readConfig } from '../util/configHandler';
+import fs from 'fs/promises';
 
 export async function handleExecuteCommand(userArgs: CLIArgs) {
   try {
@@ -13,12 +13,12 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
     const commandStr = userArgs.commandStr || getLastCommand();
 
     if (!commandStr) {
-      throw new Error("No command provided and no history found");
+      throw new Error('No command provided and no history found');
     }
 
     // Validate command input
     if (commandStr.trim().length === 0) {
-      throw new Error("Empty command provided");
+      throw new Error('Empty command provided');
     }
 
     // Execute the command
@@ -26,7 +26,7 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
     const { output, error } = await runCommand(
       mainCommand,
       commandArgs,
-      userArgs.verbose
+      userArgs.verbose,
     );
     process.stdout.write(clc.green.bold.underline(`Result:\n`));
     if (output) process.stdout.write(`${output}`);
@@ -40,12 +40,14 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
     });
   } catch (error) {
     if (error instanceof CommandExecutionError) {
-      process.stderr.write(`\n${clc.red("Command failed:")} ${error.message}\n`);
+      process.stderr.write(
+        `\n${clc.red('Command failed:')} ${error.message}\n`,
+      );
       process.exit(error.exitCode);
     }
 
     process.stderr.write(
-      `\n${clc.red("Error:")} ${error instanceof Error ? error.message : "Unknown error"}\n`
+      `\n${clc.red('Error:')} ${error instanceof Error ? error.message : 'Unknown error'}\n`,
     );
     process.exit(1);
   }
@@ -55,7 +57,7 @@ export async function handleFileCommand(userArgs: CLIArgs) {
   try {
     const filePath = userArgs.filePath;
     if (!filePath) {
-      throw new Error("No file path provided");
+      throw new Error('No file path provided');
     }
 
     // Check if file exists using relative path
@@ -66,8 +68,8 @@ export async function handleFileCommand(userArgs: CLIArgs) {
     }
 
     // Read file content
-    const content = await fs.readFile(filePath, "utf-8");
-    if (content.length === 0) throw new Error("File is empty");
+    const content = await fs.readFile(filePath, 'utf-8');
+    if (content.length === 0) throw new Error('File is empty');
 
     // Call analysis with file content
     await analyzeCommandExecution({
@@ -77,8 +79,9 @@ export async function handleFileCommand(userArgs: CLIArgs) {
     });
   } catch (error) {
     process.stderr.write(
-      `\n${clc.red("File Error:")} ${error instanceof Error ? error.message : "Unknown error"
-      }\n`
+      `\n${clc.red('File Error:')} ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }\n`,
     );
     process.exit(1);
   }
@@ -92,7 +95,7 @@ export async function handleConfigCommand(subCommand: ConfigSubCommand) {
   } else if (subCommand === ConfigSubCommand.SET) {
     await runSetup();
   } else {
-    process.stderr.write(`${clc.red("Error:")} Invalid Config command`);
+    process.stderr.write(`${clc.red('Error:')} Invalid Config command`);
   }
   process.exit(1);
 }

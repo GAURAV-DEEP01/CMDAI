@@ -2,7 +2,7 @@ import {
   ConfigSubCommand,
   Primary,
   SessionSubCommand,
-} from "../util/constants";
+} from '../util/constants';
 
 export interface CLIArgs {
   primary: Primary;

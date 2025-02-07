@@ -1,18 +1,18 @@
-import clc from "cli-color";
-import { runCommand } from "../util/commandHistory";
+import clc from 'cli-color';
+import { runCommand } from '../util/commandHistory';
 import {
   CommandAnalysis,
   FileAnalysis,
   ResponseType,
-} from "../types/responseAnalysis";
-import { CLIArgs } from "../types/cliArgs";
-import { analyzeCommandExecution } from "../util/analysisHandler";
-import inquirer from "inquirer";
-import { clearStdLine } from "../util/tools";
+} from '../types/responseAnalysis';
+import { CLIArgs } from '../types/cliArgs';
+import { analyzeCommandExecution } from '../util/analysisHandler';
+import inquirer from 'inquirer';
+import { clearStdLine } from '../util/tools';
 
 export async function handleResponse(
   response: ResponseType,
-  userArgs: CLIArgs
+  userArgs: CLIArgs,
 ) {
   if (isCommandAnalysis(response)) {
     await handleCommandResponse(response, userArgs);
@@ -22,49 +22,49 @@ export async function handleResponse(
 }
 
 function isCommandAnalysis(
-  response: ResponseType
+  response: ResponseType,
 ): response is CommandAnalysis {
   return (response as CommandAnalysis).corrected_command !== undefined;
 }
 
 async function handleCommandResponse(
   response: CommandAnalysis,
-  userArgs: CLIArgs
+  userArgs: CLIArgs,
 ) {
-  process.stdout.write(clc.bold.underline("Command Validation Results\n"));
+  process.stdout.write(clc.bold.underline('Command Validation Results\n'));
   process.stdout.write(
-    clc.blue.bold("Description:") + ` ${response.description}\n`
+    clc.blue.bold('Description:') + ` ${response.description}\n`,
   );
 
   if (response.explanation) {
     process.stdout.write(
-      clc.blue.bold("Explanation:") + ` ${response.explanation}\n`
+      clc.blue.bold('Explanation:') + ` ${response.explanation}\n`,
     );
   }
 
-  process.stdout.write(clc.blue.bold("Possible Fixes:\n"));
+  process.stdout.write(clc.blue.bold('Possible Fixes:\n'));
   response.possible_fixes.forEach((fix, index) => {
     process.stdout.write(`  ${index + 1}. ${fix}\n`);
   });
 
   process.stdout.write(
-    clc.green.bold("\nCorrected Command:") + ` ${response.corrected_command}\n`
+    clc.green.bold('\nCorrected Command:') + ` ${response.corrected_command}\n`,
   );
 
   try {
-    const [mainCommand, ...commandArgs] = response.corrected_command.split(" ");
+    const [mainCommand, ...commandArgs] = response.corrected_command.split(' ');
     const { output, error } = await runCommand(mainCommand, commandArgs, true);
 
     if (error) {
-      process.stderr.write(clc.red.bold("\nError:") + ` ${error}\n`);
+      process.stderr.write(clc.red.bold('\nError:') + ` ${error}\n`);
     } else {
-      process.stdout.write(clc.green.bold("\nOutput:") + ` ${output}\n`);
+      process.stdout.write(clc.green.bold('\nOutput:') + ` ${output}\n`);
     }
 
     const answer = await inquirer.prompt([
       {
-        type: "confirm",
-        name: "analyze",
+        type: 'confirm',
+        name: 'analyze',
         message: `Run analysis with this result?`,
         default: true,
       },
@@ -85,23 +85,23 @@ async function handleCommandResponse(
 }
 
 function handleFileResponse(response: FileAnalysis) {
-  process.stdout.write(clc.bold.underline("File Analysis Results\n"));
+  process.stdout.write(clc.bold.underline('File Analysis Results\n'));
   process.stdout.write(
-    clc.blue.bold("File Type:") + ` ${response.file_type}\n`
+    clc.blue.bold('File Type:') + ` ${response.file_type}\n`,
   );
-  process.stdout.write(clc.blue.bold("Summary:") + ` ${response.summary}\n`);
+  process.stdout.write(clc.blue.bold('Summary:') + ` ${response.summary}\n`);
 
-  process.stdout.write(clc.blue.bold("\nIssues Found:\n"));
+  process.stdout.write(clc.blue.bold('\nIssues Found:\n'));
   response.issues.forEach((issue, index) => {
     process.stdout.write(`  ${index + 1}. ${issue}\n`);
   });
 
-  process.stdout.write(clc.blue.bold("\nRecommendations:\n"));
+  process.stdout.write(clc.blue.bold('\nRecommendations:\n'));
   response.recommendations.forEach((recommendation, index) => {
     process.stdout.write(`  ${index + 1}. ${recommendation}\n`);
   });
 
   process.stdout.write(
-    clc.blue.bold("\nSecurity Analysis:") + ` ${response.security_analysis}\n`
+    clc.blue.bold('\nSecurity Analysis:') + ` ${response.security_analysis}\n`,
   );
 }

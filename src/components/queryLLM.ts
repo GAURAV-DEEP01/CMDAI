@@ -1,24 +1,24 @@
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createDeepSeek } from "@ai-sdk/deepseek";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createOllama } from "ollama-ai-provider";
-import { streamText } from "ai";
-import clc from "cli-color";
-import { clearStdLine, loadingAnimation } from "../util/tools";
-import { ResponseType } from "../types/responseAnalysis";
-import { validateAndParseResponse } from "../util/responseValidation";
-import { CLIArgs } from "../types/cliArgs";
-import { config } from "../clai";
-import dotenv from "dotenv";
-import os from "os";
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createDeepSeek } from '@ai-sdk/deepseek';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { createOllama } from 'ollama-ai-provider';
+import { streamText } from 'ai';
+import clc from 'cli-color';
+import { clearStdLine, loadingAnimation } from '../util/tools';
+import { ResponseType } from '../types/responseAnalysis';
+import { validateAndParseResponse } from '../util/responseValidation';
+import { CLIArgs } from '../types/cliArgs';
+import { config } from '../clai';
+import dotenv from 'dotenv';
+import os from 'os';
 dotenv.config({ path: `${os.homedir()}/.clai/.env` });
 const MAX_RETRIES = 3;
 
 export default async function queryLLM(
   userArgs: CLIArgs,
   input: string,
-  retryCount: number = 0
+  retryCount: number = 0,
 ): Promise<ResponseType> {
   const { verbose, filePath } = userArgs;
 
@@ -32,26 +32,27 @@ export default async function queryLLM(
   try {
     if (retryCount !== 0) {
       process.stdout.write(
-        `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\n`
+        `Attempt ${retryCount + 1}/${MAX_RETRIES} with ${model}\n`,
       );
     }
 
-    const VALIDATION_SCHEMA = `// JSON Validation Requirements ${isFile
-      ? `{
+    const VALIDATION_SCHEMA = `// JSON Validation Requirements ${
+      isFile
+        ? `{
       "file_type": "string (type of the file being analyzed)",
       "summary": "string (brief summary of the file)",
       "issues": ["string", "...", "..."],
       "recommendations": ["string", "...", "..."],
       "security_analysis": "string (detailed security analysis)"
     }`
-      : `
+        : `
     {
       "description": "string (technical explanation)",
       "possible_fixes": ["string", "...", "..."],
       "corrected_command": "string (directly executable)",
       "explanation": "string? (detailed analysis)",
     }`
-      }`;
+    }`;
 
     let interval: NodeJS.Timeout | null = null;
     let i = 0;
@@ -60,13 +61,14 @@ export default async function queryLLM(
     // Connection animation
     connecting = setInterval(() => {
       process.stdout.write(
-        `\rConnecting to model ${loadingAnimation[i++ % loadingAnimation.length]
-        }`
+        `\rConnecting to model ${
+          loadingAnimation[i++ % loadingAnimation.length]
+        }`,
       );
     }, 50);
 
     // Route to appropriate provider
-    let aiOutput = "";
+    let aiOutput = '';
     const fullPrompt =
       retryCount > 0
         ? `${input}\n\nCORRECT FORMAT:\n${VALIDATION_SCHEMA}`
@@ -75,32 +77,36 @@ export default async function queryLLM(
     // Get the appropriate provider client
     let responseStream: AsyncIterable<string>;
     switch (provider) {
-      case "google":
-        responseStream = (
-          queryGemini(model, fullPrompt, process.env.GOOGLE_API_KEY!)
+      case 'google':
+        responseStream = queryGemini(
+          model,
+          fullPrompt,
+          process.env.GOOGLE_API_KEY!,
         ).textStream;
         break;
-      case "openai":
-        responseStream = (
-          queryOpenai(model, fullPrompt, process.env.OPENAI_API_KEY!)
+      case 'openai':
+        responseStream = queryOpenai(
+          model,
+          fullPrompt,
+          process.env.OPENAI_API_KEY!,
         ).textStream;
         break;
-      case "deepseek":
-        responseStream = (
-          queryDeepseek(model, fullPrompt, process.env.DEEPSEEK_API_KEY!)
+      case 'deepseek':
+        responseStream = queryDeepseek(
+          model,
+          fullPrompt,
+          process.env.DEEPSEEK_API_KEY!,
         ).textStream;
         break;
-      case "anthropic":
-        responseStream = (
-          queryAnthropic(
-            model,
-            fullPrompt,
-            process.env.ANTHROPIC_API_KEY!
-          )
+      case 'anthropic':
+        responseStream = queryAnthropic(
+          model,
+          fullPrompt,
+          process.env.ANTHROPIC_API_KEY!,
         ).textStream;
         break;
-      case "ollama":
-        responseStream = (queryOllama(model, fullPrompt)).textStream;
+      case 'ollama':
+        responseStream = queryOllama(model, fullPrompt).textStream;
         break;
       default:
         throw new Error(`Unsupported provider: ${provider}`);
@@ -118,7 +124,7 @@ export default async function queryLLM(
           let i = 0;
           interval = setInterval(() => {
             process.stdout.write(
-              `\rThinking ${loadingAnimation[i++ % loadingAnimation.length]}`
+              `\rThinking ${loadingAnimation[i++ % loadingAnimation.length]}`,
             );
           }, 50);
         }
@@ -134,19 +140,19 @@ export default async function queryLLM(
       }
     }
 
-    process.stdout.write("\n");
+    process.stdout.write('\n');
     return validateAndParseResponse(aiOutput);
   } catch (error) {
     if (retryCount < MAX_RETRIES - 1) {
       console.error(
-        `Retrying: ${error instanceof Error ? error.message : error}`
+        `Retrying: ${error instanceof Error ? error.message : error}`,
       );
       return await queryLLM(userArgs, input, retryCount + 1);
     }
     process.stderr.write(
       clc.red(
-        `${clc.red("Error:")}AI response validation failed after ${MAX_RETRIES} tries\n`
-      )
+        `${clc.red('Error:')}AI response validation failed after ${MAX_RETRIES} tries\n`,
+      ),
     );
     process.exit(1);
   }

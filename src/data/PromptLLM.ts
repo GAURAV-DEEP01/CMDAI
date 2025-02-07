@@ -1,10 +1,10 @@
-import { detectShellEnvironment } from "../util/commandHistory";
+import { detectShellEnvironment } from '../util/commandHistory';
 
 function buildBasePrompt(
-  engineType: "command-line validation" | "file analysis",
+  engineType: 'command-line validation' | 'file analysis',
   analysisContext: string,
   validationSchema: string,
-  userPrompt?: string
+  userPrompt?: string,
 ): string {
   let basePrompt = `You are a mission-critical ${engineType} engine. Analyze and respond EXCLUSIVELY with a JSON object wrapped in \`\`\`json code block following these rules:
 
@@ -15,9 +15,9 @@ ${analysisContext}
 Response Requirements:
 - Start response with \`\`\`json and end with \`\`\`
 ${
-  engineType === "command-line validation"
-    ? "- corrected_command must pass `shellcheck` and `shfmt` validation"
-    : ""
+  engineType === 'command-line validation'
+    ? '- corrected_command must pass `shellcheck` and `shfmt` validation'
+    : ''
 }
 Failure Consequences:
 - Automated validation failure
@@ -43,7 +43,7 @@ export function defaultPrompt(
   commandWithArguments: string,
   output: string,
   error: string,
-  userPrompt?: string
+  userPrompt?: string,
 ): string {
   const validationSchema = `// VALIDATION RULES - STRICTLY ENFORCED
 1. JSON response MUST be wrapped in \`\`\`json code block and EXACTLY match this structure:
@@ -80,17 +80,17 @@ export function defaultPrompt(
 \`\`\``;
 
   return buildBasePrompt(
-    "command-line validation",
+    'command-line validation',
     analysisContext,
     validationSchema,
-    userPrompt
+    userPrompt,
   );
 }
 
 export function filePrompt(
   fileContent: string,
   filePath: string,
-  userPrompt?: string
+  userPrompt?: string,
 ): string {
   const validationSchema = `// VALIDATION RULES - STRICTLY ENFORCED
 1. JSON response MUST be wrapped in \`\`\`json code block and EXACTLY match this structure:
@@ -121,9 +121,9 @@ export function filePrompt(
 \`\`\``;
 
   return buildBasePrompt(
-    "file analysis",
+    'file analysis',
     analysisContext,
     validationSchema,
-    userPrompt
+    userPrompt,
   );
 }

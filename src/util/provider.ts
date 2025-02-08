@@ -52,3 +52,32 @@ export function queryOllama(model: string, input: string) {
     prompt: input,
   });
 }
+
+export function getStreamFromProvider(
+  provider: string,
+  model: string,
+  fullPrompt: string,
+): AsyncIterable<string> {
+  switch (provider) {
+    case 'google':
+      return queryGemini(model, fullPrompt, process.env.GOOGLE_API_KEY!)
+        .textStream;
+
+    case 'openai':
+      return queryOpenai(model, fullPrompt, process.env.OPENAI_API_KEY!)
+        .textStream;
+
+    case 'deepseek':
+      return queryDeepseek(model, fullPrompt, process.env.DEEPSEEK_API_KEY!)
+        .textStream;
+
+    case 'anthropic':
+      return queryAnthropic(model, fullPrompt, process.env.ANTHROPIC_API_KEY!)
+        .textStream;
+
+    case 'ollama':
+      return queryOllama(model, fullPrompt).textStream;
+    default:
+      throw new Error(`Unsupported provider: ${provider}`);
+  }
+}

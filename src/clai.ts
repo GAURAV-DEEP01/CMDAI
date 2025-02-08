@@ -17,7 +17,7 @@ async function main() {
     if (showInfo(userArgs)) process.exit(0);
 
     config_g = await initializeConfig();
-    if (!config_g) throw new Error('Empty Config File');
+
     await checkLLM(userArgs);
 
     await handlePrimaryCommand(userArgs);

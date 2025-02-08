@@ -10,13 +10,7 @@ import { CLIArgs } from '../types/cliArgs';
 import { config_g } from '../clai';
 import dotenv from 'dotenv';
 import os from 'os';
-import {
-  queryGemini,
-  queryOpenai,
-  queryDeepseek,
-  queryAnthropic,
-  queryOllama,
-} from '../util/provider';
+import { getStreamFromProvider } from '../util/provider';
 
 dotenv.config({ path: `${os.homedir()}/.clai/.env` });
 const MAX_RETRIES = 3;
@@ -38,10 +32,9 @@ export default async function queryLLM(
 
   try {
     let interval: NodeJS.Timeout | null = null;
-    let i = 0;
     let connecting: NodeJS.Timeout | null = null;
+    let i = 0;
 
-    // Connection animation
     connecting = setInterval(() => {
       process.stdout.write(
         `\rConnecting to model ${
@@ -50,60 +43,28 @@ export default async function queryLLM(
       );
     }, 50);
 
-    // Route to appropriate provider
     let aiOutput = '';
     const fullPrompt =
       retryCount > 0 && !askString
         ? `${input}\n\nCORRECT FORMAT:\n${ValidationSchema(!!filePath)}`
         : input;
 
-    // Get the appropriate provider client
-    let responseStream: AsyncIterable<string>;
-    switch (provider) {
-      case 'google':
-        responseStream = queryGemini(
-          model,
-          fullPrompt,
-          process.env.GOOGLE_API_KEY!,
-        ).textStream;
-        break;
-      case 'openai':
-        responseStream = queryOpenai(
-          model,
-          fullPrompt,
-          process.env.OPENAI_API_KEY!,
-        ).textStream;
-        break;
-      case 'deepseek':
-        responseStream = queryDeepseek(
-          model,
-          fullPrompt,
-          process.env.DEEPSEEK_API_KEY!,
-        ).textStream;
-        break;
-      case 'anthropic':
-        responseStream = queryAnthropic(
-          model,
-          fullPrompt,
-          process.env.ANTHROPIC_API_KEY!,
-        ).textStream;
-        break;
-      case 'ollama':
-        responseStream = queryOllama(model, fullPrompt).textStream;
-        break;
-      default:
-        throw new Error(`Unsupported provider: ${provider}`);
-    }
-    clearInterval(connecting);
-    clearStdLine();
-    process.stdout.write('\r' + clc.erase.line + '\n');
+    let responseStream: AsyncIterable<string> = getStreamFromProvider(
+      provider,
+      model,
+      fullPrompt,
+    );
+
     try {
       let isResponded = false;
       for await (const chunk of responseStream) {
-        if (!verbose && !isResponded && !askString) {
+        if (!isResponded) {
           clearInterval(connecting);
           clearStdLine();
-          isResponded = true;
+          process.stdout.write('\r' + clc.erase.line);
+          process.stdout.write('\r' + clc.erase.line);
+        }
+        if (!verbose && !isResponded && !askString) {
           let i = 0;
           interval = setInterval(() => {
             process.stdout.write(
@@ -115,6 +76,7 @@ export default async function queryLLM(
         if (verbose || askString) {
           process.stdout.write(chunk);
         }
+        isResponded = true;
       }
     } finally {
       if (interval) {

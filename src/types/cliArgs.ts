@@ -1,4 +1,4 @@
-import { ConfigSubCommand, Primary } from '../util/constants';
+import { ConfigSubCommand, Primary } from './constants';
 
 export interface CLIArgs {
   primary: Primary;

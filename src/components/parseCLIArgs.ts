@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { CLIArgs } from '../types/cliArgs';
-import { Primary, ConfigSubCommand } from '../util/constants';
+import { Primary, ConfigSubCommand } from '../types/constants';
 
 const validateCLIArgs = (args: CLIArgs): void => {
   const checkInvalidOptions = (...optionsToCheck: (keyof CLIArgs)[]): void => {

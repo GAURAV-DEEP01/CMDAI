@@ -6,12 +6,13 @@
     "clai": "dist/clai.js"
   },
   "scripts": {
-    "dev": "npm run build && node dist/clai.js --",
+    "dev": "ts-node src/clai.ts",
     "package": "npm unlink -g clai && npx tsc && npm link",
-    "format": "prettier --config .prettierrc 'src/**/*.ts' --write"
+    "format": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "build": "npm run format && tsc"
   },
   "keywords": [],
-  "author": "",
+  "author": "Nischal and Gaurav",
   "license": "ISC",
   "description": "A CLI tool for AI-powered command analysis.",
   "devDependencies": {
@@ -19,21 +20,21 @@
     "@types/inquirer": "^9.0.7",
     "@types/json-schema": "^7.0.15",
     "prettier": "^3.4.2",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.6",
     "@ai-sdk/deepseek": "^0.1.8",
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
-    "ai": "^4.1.21",
+    "ai": "^4.1.26",
     "axios": "^1.7.9",
     "cli-color": "^2.0.4",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",
     "inquirer": "^12.4.1",
     "ollama-ai-provider": "^1.2.0",
-    "typescript": "^5.7.3",
     "zod": "^3.24.1"
   }
 }

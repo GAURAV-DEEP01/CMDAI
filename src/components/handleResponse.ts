@@ -14,21 +14,11 @@ export async function handleResponse(
   response: ResponseType,
   userArgs: CLIArgs,
 ) {
-  if (isCommandAnalysis(response)) {
-    await handleCommandResponse(response, userArgs);
-  } else if (isFileAnalysis(response)) {
-    handleFileResponse(response);
+  if (userArgs.filePath) {
+    handleFileResponse(response as FileAnalysis);
+  } else {
+    await handleCommandResponse(response as CommandAnalysis, userArgs);
   }
-}
-
-function isFileAnalysis(response: ResponseType): response is FileAnalysis {
-  return (response as FileAnalysis).file_type !== undefined;
-}
-
-function isCommandAnalysis(
-  response: ResponseType,
-): response is CommandAnalysis {
-  return (response as CommandAnalysis).corrected_command !== undefined;
 }
 
 async function handleCommandResponse(

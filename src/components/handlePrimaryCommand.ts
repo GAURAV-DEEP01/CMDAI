@@ -5,7 +5,7 @@ import {
   handleAskCommand,
 } from './commandHandler';
 import { CLIArgs } from '../types/cliArgs';
-import { Primary, ConfigSubCommand } from '../util/constants';
+import { Primary, ConfigSubCommand } from '../types/constants';
 
 export async function handlePrimaryCommand(userArgs: CLIArgs) {
   switch (userArgs.primary) {

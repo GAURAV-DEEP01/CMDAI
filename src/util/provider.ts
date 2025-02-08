@@ -5,7 +5,7 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOllama } from 'ollama-ai-provider';
 import { streamText } from 'ai';
 
-export function queryGemini(model: string, input: string, apiKey: string) {
+function queryGemini(model: string, input: string, apiKey: string) {
   const google = createGoogleGenerativeAI({
     apiKey,
   });
@@ -15,7 +15,7 @@ export function queryGemini(model: string, input: string, apiKey: string) {
   });
 }
 
-export function queryOpenai(model: string, input: string, apiKey: string) {
+function queryOpenai(model: string, input: string, apiKey: string) {
   const openai = createOpenAI({
     apiKey,
   });
@@ -25,7 +25,7 @@ export function queryOpenai(model: string, input: string, apiKey: string) {
   });
 }
 
-export function queryDeepseek(model: string, input: string, apiKey: string) {
+function queryDeepseek(model: string, input: string, apiKey: string) {
   const deepseek = createDeepSeek({
     apiKey,
   });
@@ -35,7 +35,7 @@ export function queryDeepseek(model: string, input: string, apiKey: string) {
   });
 }
 
-export function queryAnthropic(model: string, input: string, apiKey: string) {
+function queryAnthropic(model: string, input: string, apiKey: string) {
   const anthropic = createAnthropic({
     apiKey,
   });
@@ -45,7 +45,7 @@ export function queryAnthropic(model: string, input: string, apiKey: string) {
   });
 }
 
-export function queryOllama(model: string, input: string) {
+function queryOllama(model: string, input: string) {
   const ollama = createOllama();
   return streamText({
     model: ollama(model),

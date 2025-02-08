@@ -4,36 +4,18 @@ import os from 'os';
 import inquirer from 'inquirer';
 import dotenv from 'dotenv';
 import axios from 'axios';
-import { Config, Provider } from '../types/config';
 import clc from 'cli-color';
+import {
+  API_PROVIDERS,
+  Config,
+  DEFAULT_OLLAMA_MODELS,
+  Provider,
+} from '../types/config';
+
 const homeDir = os.homedir();
 const CONFIG_DIR = path.join(homeDir, '.clai');
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
 const ENV_PATH = path.join(CONFIG_DIR, '.env');
-
-// Default models for fallback scenarios
-const DEFAULT_OLLAMA_MODELS = [
-  'llama3.2:3b',
-  'deepseek-r1:1.5b',
-  'deepseek-r1:7b',
-  'codellama',
-  'mistral',
-  'gemma',
-  'phi-3',
-  'orca-mini',
-];
-
-const API_PROVIDERS = {
-  openai: ['gpt-3.5-turbo', 'gpt-4-turbo', 'gpt-4o', 'gpt-4'],
-  anthropic: [
-    'claude-3-opus',
-    'claude-3-sonnet',
-    'claude-3-haiku',
-    'claude-2.1',
-  ],
-  google: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1-pro', 'gemini-1'],
-  deepseek: ['deepseek-chat', 'deepseek-coder', 'deepseek-math'],
-};
 
 export async function initializeConfig() {
   if (!fs.existsSync(CONFIG_PATH)) {
@@ -41,6 +23,24 @@ export async function initializeConfig() {
     await runSetup();
   }
   return readConfig();
+}
+
+export function readConfig(): Config {
+  const configPath = path.join(os.homedir(), '.clai', 'config.json');
+  try {
+    const data = fs.readFileSync(configPath, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(
+        `${clc.red.bold('Error')} reading config file:`,
+        error.message,
+      );
+    } else {
+      console.error(`${clc.red.bold('Error')} reading config file:`, error);
+    }
+    process.exit(0);
+  }
 }
 
 export async function runSetup() {
@@ -109,8 +109,6 @@ export async function runSetup() {
     process.exit(1);
   }
 
-  // ... existing code ...
-
   const config: Config = {
     provider: answers.apiProvider || 'ollama',
     model:
@@ -140,7 +138,6 @@ export async function runSetup() {
       envVars = dotenv.parse(existingContent);
     }
 
-    // Update the API key for the current provider
     envVars[envVarName] = answers.apiKey;
 
     // Convert the object back to .env format string
@@ -159,22 +156,4 @@ export async function runSetup() {
 
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
   process.stdout.write(`\n✅ Configuration saved to ${CONFIG_PATH}\n`);
-}
-
-export function readConfig(): Config {
-  const configPath = path.join(os.homedir(), '.clai', 'config.json');
-  try {
-    const data = fs.readFileSync(configPath, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(
-        `${clc.red.bold('Error')} reading config file:`,
-        error.message,
-      );
-    } else {
-      console.error(`${clc.red.bold('Error')} reading config file:`, error);
-    }
-    process.exit(0);
-  }
 }

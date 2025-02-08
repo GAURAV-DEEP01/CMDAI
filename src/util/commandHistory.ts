@@ -143,7 +143,6 @@ export function runCommand(
   });
 }
 
-// Helper: Run a shell command and capture its output
 export function getLastCommand(offset: number = 1): string {
   try {
     const shell = process.env.SHELL || '';

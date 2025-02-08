@@ -3,7 +3,7 @@ import { getLastCommand, runCommand } from '../util/commandHistory';
 import { analyzeCommandExecution } from '../util/analysisHandler';
 import { CommandExecutionError } from '../types/errors';
 import { CLIArgs } from '../types/cliArgs';
-import { ConfigSubCommand } from '../util/constants';
+import { ConfigSubCommand } from '../types/constants';
 import { runSetup, readConfig } from '../util/configHandler';
 import fs from 'fs/promises';
 

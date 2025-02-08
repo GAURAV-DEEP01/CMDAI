@@ -11,6 +11,7 @@ import { config_g } from '../clai';
 import dotenv from 'dotenv';
 import os from 'os';
 import { getStreamFromProvider } from '../util/provider';
+import marked from '../util/cliMarkdown';
 
 dotenv.config({ path: `${os.homedir()}/.clai/.env` });
 const MAX_RETRIES = 3;
@@ -64,7 +65,8 @@ export default async function queryLLM(
           process.stdout.write('\r' + clc.erase.line);
           process.stdout.write('\r' + clc.erase.line);
         }
-        if (!verbose && !isResponded && !askString) {
+
+        if ((!verbose && !isResponded) || askString) {
           let i = 0;
           interval = setInterval(() => {
             process.stdout.write(
@@ -72,18 +74,26 @@ export default async function queryLLM(
             );
           }, 50);
         }
-        aiOutput += chunk;
-        if (verbose || askString) {
+
+        if (verbose) {
           process.stdout.write(chunk);
         }
+
+        aiOutput += chunk;
         isResponded = true;
       }
     } finally {
       if (interval) {
         clearInterval(interval);
-        process.stdout.write(clc.erase.line);
+        clearStdLine();
+
+        process.stdout.write('\r' + clc.erase.line);
+        process.stdout.write('\r' + clc.erase.line);
+
+        if (askString) process.stdout.write(await marked.parse(aiOutput));
       }
     }
+
     process.stdout.write('\n');
     if (askString) return aiOutput;
     return validateAndParseResponse(aiOutput);

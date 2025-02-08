@@ -6,9 +6,8 @@
     "clai": "dist/clai.js"
   },
   "scripts": {
-    "dev": "ts-node src/clai.ts",
-    "package": "npm unlink -g clai && npx tsc && npm link",
     "format": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "package": "npm unlink -g clai && npx tsc && npm link",
     "build": "npm run format && tsc"
   },
   "keywords": [],

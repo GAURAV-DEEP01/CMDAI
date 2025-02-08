@@ -14,11 +14,12 @@ export async function handleResponse(
   response: ResponseType,
   userArgs: CLIArgs,
 ) {
-  if (userArgs.filePath) {
+  if (userArgs.askString) {
+    process.stdout.write(response as string);
+  } else if (userArgs.filePath) {
     handleFileResponse(response as FileAnalysis);
-  } else {
-    await handleCommandResponse(response as CommandAnalysis, userArgs);
-  }
+  } else
+    return await handleCommandResponse(response as CommandAnalysis, userArgs);
 }
 
 async function handleCommandResponse(

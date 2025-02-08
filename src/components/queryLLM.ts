@@ -4,7 +4,6 @@ import {
   loadingAnimation,
   ValidationSchema,
 } from '../util/tools';
-import { ResponseType } from '../types/responseAnalysis';
 import { validateAndParseResponse } from '../util/responseValidation';
 import { CLIArgs } from '../types/cliArgs';
 import { config_g } from '../clai';
@@ -12,6 +11,7 @@ import dotenv from 'dotenv';
 import os from 'os';
 import { getStreamFromProvider } from '../util/provider';
 import marked from '../util/cliMarkdown';
+import { handleResponse } from './handleResponse';
 
 dotenv.config({ path: `${os.homedir()}/.clai/.env` });
 const MAX_RETRIES = 3;
@@ -20,7 +20,7 @@ export default async function queryLLM(
   userArgs: CLIArgs,
   input: string,
   retryCount: number = 0,
-): Promise<ResponseType> {
+) {
   const { verbose, filePath, askString } = userArgs;
   const { provider } = config_g;
 
@@ -89,14 +89,16 @@ export default async function queryLLM(
 
         process.stdout.write('\r' + clc.erase.line);
         process.stdout.write('\r' + clc.erase.line);
-
-        if (askString) process.stdout.write(await marked.parse(aiOutput));
       }
     }
 
     process.stdout.write('\n');
-    if (askString) return aiOutput;
-    return validateAndParseResponse(aiOutput);
+    if (askString) {
+      process.stdout.write(await marked.parse(aiOutput));
+    } else {
+      const response = validateAndParseResponse(aiOutput);
+      await handleResponse(response, userArgs);
+    }
   } catch (error) {
     if (retryCount < MAX_RETRIES - 1) {
       console.error(

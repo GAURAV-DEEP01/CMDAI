@@ -1,5 +1,4 @@
 import { defaultPrompt, filePrompt } from '../data/PromptLLM';
-import { handleResponse } from '../components/handleResponse';
 import queryLLM from '../components/queryLLM';
 import { CLIArgs } from '../types/cliArgs';
 
@@ -29,9 +28,7 @@ export async function analyzeCommandExecution(params: {
   }
 
   try {
-    const response = await queryLLM(userArgs, input, 0);
-
-    await handleResponse(response, userArgs);
+    await queryLLM(userArgs, input, 0);
   } catch (error) {
     console.error(
       '\nAnalysis failed:',

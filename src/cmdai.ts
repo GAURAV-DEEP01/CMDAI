@@ -12,7 +12,7 @@ export let config_g: Config;
 
 async function main() {
   try {
-    let userArgs: CLIArgs = parseCLIArgs();
+    let userArgs: CLIArgs = await parseCLIArgs();
 
     if (showInfo(userArgs)) process.exit(0);
 

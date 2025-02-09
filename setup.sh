@@ -2,9 +2,9 @@
 set -e
 
 # Configuration
-REPO_URL="https://github.com/GAURAV-DEEP01/CLAI"
-REPO_DIR="$HOME/clai"
-CLAI_DIR="$HOME/.clai"
+REPO_URL="https://github.com/GAURAV-DEEP01/CMDAI"
+REPO_DIR="$HOME/cmdai"
+CMDAI_DIR="$HOME/.cmdai"
 
 # Detect shell type
 SHELL_NAME=$(basename "$SHELL")
@@ -36,8 +36,8 @@ configure_shellrc() {
     case "$SHELL_NAME" in
         bash) 
             shell_rc="$HOME/.bashrc"
-            local config_content="# CLAI Configuration\nPROMPT_COMMAND=\"history -a\"\nshopt -s histappend"
-            if ! grep -qF "# CLAI Configuration" "$shell_rc" 2>/dev/null; then
+            local config_content="# CMDAI Configuration\nPROMPT_COMMAND=\"history -a\"\nshopt -s histappend"
+            if ! grep -qF "# CMDAI Configuration" "$shell_rc" 2>/dev/null; then
                 echo "Updating $shell_rc configuration..."
                 echo "$config_content" >> "$shell_rc"
             fi
@@ -53,11 +53,11 @@ configure_shellrc() {
     echo "$shell_rc"
 }
 
-# Create .clai directory
-create_clai_dir() {
-    if [ ! -d "$CLAI_DIR" ]; then
-        echo "Creating CLAI directory at $CLAI_DIR..."
-        mkdir -p "$CLAI_DIR"
+# Create .cmdai directory
+create_cmdai_dir() {
+    if [ ! -d "$CMDAI_DIR" ]; then
+        echo "Creating CMDAI directory at $CMDAI_DIR..."
+        mkdir -p "$CMDAI_DIR"
     fi
 }
 
@@ -77,7 +77,7 @@ build_project() {
 main() {
     clone_repo
     shell_rc=$(configure_shellrc) || exit 1
-    create_clai_dir
+    create_cmdai_dir
     build_project
     echo "
  ██████╗  ██╗        █████╗    ██╗
@@ -87,9 +87,9 @@ main() {
 ╚██████╗  ███████╗  ██║  ██║   ██║
  ╚═════╝  ╚══════╝  ╚═╝  ╚═╝   ╚═╝"
 
-echo "\nCLAI setup completed successfully!"
-echo "to get started:"
-echo "Run \033[1;32mclai --help\033[0m to list all the commands."
+echo "\ncmdai setup completed successfully!"
+echo "To get started:"
+echo "Run \033[1;32mcmdai --help\033[0m to list all the commands."
     if [ "$SHELL_NAME" = "bash" ]; then
         echo "You may need to restart your shell or run: source $shell_rc"
     fi

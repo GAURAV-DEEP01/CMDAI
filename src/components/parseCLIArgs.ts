@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { CLIArgs } from '../types/cliArgs';
 import { Primary, ConfigSubCommand } from '../types/constants';
 
-const validateCLIArgs = (args: CLIArgs): void => {
+function validateCLIArgs(args: CLIArgs): void {
   const checkInvalidOptions = (...optionsToCheck: (keyof CLIArgs)[]): void => {
     const invalidOptions = optionsToCheck.filter(
       (opt) => args[opt] !== undefined,
@@ -15,6 +15,9 @@ const validateCLIArgs = (args: CLIArgs): void => {
   };
 
   switch (args.primary) {
+    case Primary.PIPED:
+      checkInvalidOptions('commandStr', 'filePath', 'askString', 'subCommand');
+      break;
     case Primary.CONFIG:
       checkInvalidOptions('commandStr', 'prompt', 'filePath', 'askString');
       break;
@@ -59,12 +62,27 @@ const validateCLIArgs = (args: CLIArgs): void => {
   if (args.version && args.help) {
     throw new Error('--version and --help cannot be used together');
   }
-};
+}
 
-export const parseCLIArgs = (): CLIArgs => {
+async function readStdin(): Promise<string> {
+  return new Promise((resolve) => {
+    let data = '';
+    process.stdin.on('data', (chunk) => (data += chunk));
+    process.stdin.on('end', () => resolve(data.trim()));
+  });
+}
+
+export async function parseCLIArgs(): Promise<CLIArgs> {
+  const cliArgs: CLIArgs = { primary: Primary.EXECUTE };
+  if (!process.stdin.isTTY) {
+    const pipedInput = await readStdin();
+    if (pipedInput) {
+      cliArgs.primary = Primary.PIPED;
+      cliArgs.pipedStr = pipedInput;
+    }
+  }
+
   const program = new Command();
-  const cliArgs: CLIArgs = { primary: Primary.EXECUTE }; // Default to EXECUTE
-
   // Setup config subcommand
   const configCmd = new Command('config').description(
     'Manage application configuration',
@@ -101,7 +119,9 @@ export const parseCLIArgs = (): CLIArgs => {
       const options = program.opts();
 
       // Determine primary action based on options
-      if (options.command) {
+      if (cliArgs.pipedStr) {
+        cliArgs.primary = Primary.PIPED;
+      } else if (options.command) {
         cliArgs.primary = Primary.EXECUTE;
       } else if (options.file) {
         cliArgs.primary = Primary.FILE;
@@ -131,33 +151,37 @@ export const parseCLIArgs = (): CLIArgs => {
   validateCLIArgs(cliArgs);
 
   return cliArgs;
-};
+}
+
+// function handlePipedCommand(pipedData: string) {
+//   throw new Error('Function not implemented.');
+// }
 
 // command combinations
-// clai
-// clai config set
-// clai config get
-// clai --version
-// clai --help
-// clai --verbose
-// clai --command="<command>"
-// clai --command="<command>" --model="<model>"
-// clai --prompt="<prompt>"
-// clai --prompt="<prompt>" --model="<model>"
-// clai --command="<command>" --verbose
-// clai --command="<command>" --verbose --model="<model>"
-// clai --prompt="<prompt>" --verbose
-// clai --prompt="<prompt>" --verbose --model="<model>"
-// clai --command="<command>" --prompt="<prompt>"
-// clai --command="<command>" --prompt="<prompt>" --model="<model>"
-// clai --command="<command>" --prompt="<prompt>" --verbose
-// clai --command="<command>" --prompt="<prompt>" --verbose --model="<model>"
-// clai --file="<file>" --verbose
-// clai --file="<file>" --verbose --model="<model>"
-// clai --file="<file>" --prompt="<question>"
-// clai --file="<file>" --prompt="<question>" --model="<model>"
-// clai --file="<file>" --prompt="<question>" --verbose
-// clai --file="<file>" --prompt="<question>" --verbose --model="<model>"
-// clai --ask="<question>" --model="<model>"
+// cmdai
+// cmdai config set
+// cmdai config get
+// cmdai --version
+// cmdai --help
+// cmdai --verbose
+// cmdai --command="<command>"
+// cmdai --command="<command>" --model="<model>"
+// cmdai --prompt="<prompt>"
+// cmdai --prompt="<prompt>" --model="<model>"
+// cmdai --command="<command>" --verbose
+// cmdai --command="<command>" --verbose --model="<model>"
+// cmdai --prompt="<prompt>" --verbose
+// cmdai --prompt="<prompt>" --verbose --model="<model>"
+// cmdai --command="<command>" --prompt="<prompt>"
+// cmdai --command="<command>" --prompt="<prompt>" --model="<model>"
+// cmdai --command="<command>" --prompt="<prompt>" --verbose
+// cmdai --command="<command>" --prompt="<prompt>" --verbose --model="<model>"
+// cmdai --file="<file>" --verbose
+// cmdai --file="<file>" --verbose --model="<model>"
+// cmdai --file="<file>" --prompt="<question>"
+// cmdai --file="<file>" --prompt="<question>" --model="<model>"
+// cmdai --file="<file>" --prompt="<question>" --verbose
+// cmdai --file="<file>" --prompt="<question>" --verbose --model="<model>"
+// cmdai --ask="<question>" --model="<model>"
 
 // same as above for short flags

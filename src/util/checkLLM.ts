@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import clc from 'cli-color';
 import { CLIArgs } from '../types/cliArgs';
-import { config_g } from '../clai';
+import { config_g } from '../cmdai';
 
 export async function checkLLM(userArg: CLIArgs) {
   if (config_g.provider != 'ollama' && userArg.model) {

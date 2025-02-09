@@ -9,11 +9,11 @@
 
 # <p align="center"><strong align="center">Command Line AI</strong></p>
 
-**CLAI** is an innovative command-line tool that leverages AI to analyze shell commands and their outputs. By utilizing Ollama, CLAI can help you troubleshoot errors, suggest fixes, and provide detailed insights into your terminal commands.
+**cmdai** is an innovative command-line tool that leverages AI to analyze shell commands and their outputs. By utilizing Ollama, cmdai can help you troubleshoot errors, suggest fixes, and provide detailed insights into your terminal commands.
 
 ## Features
 
-- **Command History Integration**: CLAI fetches and analyzes the last executed command.
+- **Command History Integration**: cmdai fetches and analyzes the last executed command.
 - **Error Detection and Suggestions**: It identifies errors and suggests solutions or alternative commands.
 - **AI-Powered Analysis**: Uses advanced AI models like Ollama to provide structured insights.
 - **Interactive CLI**: Engages with users to offer AI assistance after a command execution.
@@ -22,7 +22,7 @@
 
 ### Automatic Installation
 
-To install CLAI, run the following command:
+To install cmdai, run the following command:
 
 ```bash
 curl -sSL <INSTALLATION_SCRIPT_URL> | sh
@@ -30,41 +30,41 @@ curl -sSL <INSTALLATION_SCRIPT_URL> | sh
 
 This script will handle all dependencies and setup.
 
-To ensure that users who want to set up CLAI manually can do so without issues, I'll add detailed manual setup steps to the README. Here's the updated section:
+To ensure that users who want to set up cmdai manually can do so without issues, I'll add detailed manual setup steps to the README. Here's the updated section:
 
 ---
 
 ## Manual Installation
 
-If you prefer to set up CLAI manually, follow these steps:
+If you prefer to set up cmdai manually, follow these steps:
 
 ### 1. Clone the Repository
 
-First, clone the CLAI repository to your desired location (e.g., `~/clai`):
+First, clone the cmdai repository to your desired location (e.g., `~/cmdai`):
 
 ```bash
-git clone https://github.com/GAURAV-DEEP01/CLAI.git ~/clai
-cd ~/clai
+git clone https://github.com/GAURAV-DEEP01/cmdai.git ~/cmdai
+cd ~/cmdai
 ```
 
-### 2. Create the `.clai` Directory
+### 2. Create the `.cmdai` Directory
 
-CLAI requires a directory to store its configuration and other files. Create the `.clai` directory in your home folder:
+cmdai requires a directory to store its configuration and other files. Create the `.cmdai` directory in your home folder:
 
 ```bash
-mkdir -p ~/.clai
+mkdir -p ~/.cmdai
 ```
 
 ### 3. Configure Shell History Settings
 
-Depending on your shell, you may need to configure your shell's history settings to ensure CLAI works correctly.
+Depending on your shell, you may need to configure your shell's history settings to ensure cmdai works correctly.
 
 #### For **Bash** Users:
 
 Add the following lines to your `~/.bashrc` file:
 
 ```bash
-# CLAI Configuration
+# cmdai Configuration
 PROMPT_COMMAND="history -a"
 shopt -s histappend
 ```
@@ -81,7 +81,7 @@ No additional configuration is required for Zsh users.
 
 ### 4. Install Dependencies
 
-Ensure you have the necessary dependencies installed. CLAI requires `git` and `npm`. If they are not installed, you can install them using your package manager.
+Ensure you have the necessary dependencies installed. cmdai requires `git` and `npm`. If they are not installed, you can install them using your package manager.
 
 For example, on Ubuntu:
 
@@ -95,20 +95,20 @@ sudo apt install git npm
 Navigate to the cloned repository and build the project:
 
 ```bash
-cd ~/clai
+cd ~/cmdai
 npm install
 npm run package
 ```
 
 ### 6. Verify Installation
 
-After completing the above steps, CLAI should be set up and ready to use. You can verify the installation by running:
+After completing the above steps, cmdai should be set up and ready to use. You can verify the installation by running:
 
 ```bash
-clai --version
+cmdai --version
 ```
 
-If everything is set up correctly, you should see the version information for CLAI.
+If everything is set up correctly, you should see the version information for cmdai.
 
 ---
 
@@ -117,9 +117,9 @@ If everything is set up correctly, you should see the version information for CL
 ### Basic Commands
 
 ```bash
-clai                      # Rerun the last command and analyze the output
-clai config get           # Show the current configuration
-clai config set           # Update or reset the configuration
+cmdai                      # Rerun the last command and analyze the output
+cmdai config get           # Show the current configuration
+cmdai config set           # Update or reset the configuration
 ```
 
 ### Options
@@ -135,16 +135,16 @@ clai config set           # Update or reset the configuration
 ### Examples
 
 ```bash
-clai                        # Rerun the last command
-clai --model="deepseek-r1:7b" --verbose
-clai --prompt="echo 'Hello, world!'"
+cmdai                        # Rerun the last command
+cmdai --model="deepseek-r1:7b" --verbose
+cmdai --prompt="echo 'Hello, world!'"
 ```
 
 ---
 
 ## How It Works
 
-1. **Run a Command**: CLAI captures the last executed command.
+1. **Run a Command**: cmdai captures the last executed command.
 2. **AI Analysis**: It sends the command and its output to an AI model for analysis.
 3. **Get Insights**: The AI provides a structured response with:
    - Error description

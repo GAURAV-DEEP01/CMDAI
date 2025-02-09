@@ -166,7 +166,7 @@ export function getLastCommand(offset: number = 1): string {
     const command = execSync(historyCommand, { shell: shell })
       .toString()
       .trim();
-    if (command.includes('clai')) {
+    if (command.includes('cmdai')) {
       return getLastCommand(offset + 1);
     }
     return command;

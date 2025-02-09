@@ -11,8 +11,16 @@
     "outDir": "./dist",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
   },
-  "include": ["src/**/*", "src/config/.clai"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*",
+    "src/config/.cmdai"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

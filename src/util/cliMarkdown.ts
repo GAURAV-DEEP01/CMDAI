@@ -8,7 +8,7 @@ class CustomTerminalRenderer extends TerminalRenderer {
   code(token: Tokens.Code): string {
     //@ts-ignore
     const { text, lang, escaped } = token;
-    const language = lang?.trim() || 'code';
+    const language = lang?.trim() || 'Plain text';
     const header = clc.bgWhite.black.bold(` ${language} `);
     const border = clc.white('────────────────');
     return `\n${header}${border}\n\n${super.code(token)}${border}\n\n`;

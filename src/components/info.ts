@@ -4,12 +4,12 @@ import clc from 'cli-color';
 
 function showHelp() {
   process.stdout.write(`
-    ${clc.bold('Usage:')} ${clc.cyan('clai [command] [options]')}
+    ${clc.bold('Usage:')} ${clc.cyan('cmdai [command] [options]')}
 
     ${clc.bold('Commands:')}
-    ${clc.green('clai')}              		# Rerun the last command and analyze output.
-    ${clc.green('clai config set')}   		# Update or reset configuration.
-    ${clc.green('clai config get')}   		# Show current configuration.
+    ${clc.green('cmdai')}              		# Rerun the last command and analyze output.
+    ${clc.green('cmdai config set')}   		# Update or reset configuration.
+    ${clc.green('cmdai config get')}   		# Show current configuration.
 
     ${clc.bold('Options:')}
     ${clc.yellow('-m, --model <name>')}  		# Specify AI model.
@@ -21,21 +21,21 @@ function showHelp() {
     ${clc.yellow('-a, --ask <question>')}		# Ask a specific question.
 
     ${clc.bold('Examples:')}
-    ${clc.blue('clai')}                               		# Rerun last command.
-    ${clc.blue('clai config set')}                    		# Update configuration.
-    ${clc.blue('clai --version')}                     		# Show version info.
-    ${clc.blue('clai --help')}                        		# Show help message.
-    ${clc.blue('clai --command "echo Hello"')}        		# Execute a command.
-    ${clc.blue('clai --prompt "Hello"')}              		# Use a custom prompt for command or file.
-    ${clc.blue('clai --file "example.txt" --verbose')}		# Process a file with verbose output.
-    ${clc.blue('clai --ask "what does echo do?"')}    		# Ask a question.
+    ${clc.blue('cmdai')}                               		# Rerun last command.
+    ${clc.blue('cmdai config set')}                    		# Update configuration.
+    ${clc.blue('cmdai --version')}                     		# Show version info.
+    ${clc.blue('cmdai --help')}                        		# Show help message.
+    ${clc.blue('cmdai --command "echo Hello"')}        		# Execute a command.
+    ${clc.blue('cmdai --prompt "Hello"')}              		# Use a custom prompt for command or file.
+    ${clc.blue('cmdai --file "example.txt" --verbose')}		# Process a file with verbose output.
+    ${clc.blue('cmdai --ask "what does echo do?"')}    		# Ask a question.
 
     ${clc.bold('Short Flags:')}
-    ${clc.blue('clai -V')}                		# Show version info.
-    ${clc.blue('clai -h')}                		# Show help.
-    ${clc.blue('clai -v')}                		# Enable verbose output.
-    ${clc.blue('clai -c "echo Hello"')}   		# Execute a command.
-    ${clc.blue('clai -p "echo Hello"')}   		# Use a custom prompt.
+    ${clc.blue('cmdai -V')}                		# Show version info.
+    ${clc.blue('cmdai -h')}                		# Show help.
+    ${clc.blue('cmdai -v')}                		# Enable verbose output.
+    ${clc.blue('cmdai -c "echo Hello"')}   		# Execute a command.
+    ${clc.blue('cmdai -p "echo Hello"')}   		# Use a custom prompt.
   `);
 }
 

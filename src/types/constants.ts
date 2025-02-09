@@ -5,6 +5,7 @@ export enum Primary {
   HELP = 'help',
   FILE = 'file',
   CONFIG = 'config',
+  PIPED = 'piped',
 }
 
 export enum ConfigSubCommand {

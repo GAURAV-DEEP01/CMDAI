@@ -13,7 +13,7 @@ import {
 } from '../types/config';
 
 const homeDir = os.homedir();
-const CONFIG_DIR = path.join(homeDir, '.clai');
+const CONFIG_DIR = path.join(homeDir, '.cmdai');
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
 const ENV_PATH = path.join(CONFIG_DIR, '.env');
 
@@ -26,7 +26,7 @@ export async function initializeConfig() {
 }
 
 export function readConfig(): Config {
-  const configPath = path.join(os.homedir(), '.clai', 'config.json');
+  const configPath = path.join(os.homedir(), '.cmdai', 'config.json');
   try {
     const data = fs.readFileSync(configPath, 'utf-8');
     return JSON.parse(data);

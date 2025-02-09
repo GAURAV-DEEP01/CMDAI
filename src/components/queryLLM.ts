@@ -6,14 +6,14 @@ import {
 } from '../util/tools';
 import { validateAndParseResponse } from '../util/responseValidation';
 import { CLIArgs } from '../types/cliArgs';
-import { config_g } from '../clai';
+import { config_g } from '../cmdai';
 import dotenv from 'dotenv';
 import os from 'os';
 import { getStreamFromProvider } from '../util/provider';
 import marked from '../util/cliMarkdown';
 import { handleResponse } from './handleResponse';
 
-dotenv.config({ path: `${os.homedir()}/.clai/.env` });
+dotenv.config({ path: `${os.homedir()}/.cmdai/.env` });
 const MAX_RETRIES = 3;
 
 export default async function queryLLM(

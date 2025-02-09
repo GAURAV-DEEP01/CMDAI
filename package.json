@@ -1,13 +1,13 @@
 {
-  "name": "clai",
+  "name": "cmdai",
   "version": "0.9.0",
-  "main": "dist/clai.js",
+  "main": "dist/cmdai.js",
   "bin": {
-    "clai": "dist/clai.js"
+    "cmdai": "dist/cmdai.js"
   },
   "scripts": {
     "format": "prettier --config .prettierrc 'src/**/*.ts' --write",
-    "package": "npm unlink -g clai && npx tsc && npm link",
+    "package": "npm unlink -g cmdai && npx tsc && npm link",
     "build": "npm run format && tsc"
   },
   "keywords": [],

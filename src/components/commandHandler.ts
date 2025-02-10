@@ -27,9 +27,6 @@ export async function handleExecuteCommand(userArgs: CLIArgs) {
       userArgs.verbose,
       !userArgs.commandStr,
     );
-    process.stdout.write(clc.green.bold.underline(`Result:\n`));
-    if (output) process.stdout.write(`${output}`);
-    if (error) process.stderr.write(`${error}`);
 
     await analyzeCommandExecution({
       command: commandStr,

@@ -31,6 +31,8 @@ export function runCommand(
     if (verbose)
       process.stdout.write(`Running command: ${command} ${args.join(' ')}\n`);
 
+    process.stdout.write(clc.green.bold.underline(`Result:\n`));
+
     const spawnedProcess = spawn(command, args, { shell: true });
     let output = '';
     let error = '';
@@ -149,7 +151,7 @@ export function getLastCommand(offset: number = 1): string {
     let historyCommand: string;
 
     if (shell.includes('zsh')) {
-      const historyFile = process.env.HISTFILE || '~/.zsh_history';
+      const historyFile = '~/.zsh_history';
       historyCommand = `tail -n ${
         offset + 1
       } ${historyFile} | head -n 1 | sed 's/^: [0-9]*:[0-9];//'`;
